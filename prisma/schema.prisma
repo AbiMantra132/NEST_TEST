@@ -12,3 +12,17 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+model Major {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  major MajorType
+}
+
+enum MajorType {
+  INFORMATIKA
+  SISTEM_INFORMASI
+  SISTEM_INFORMASI_AKUNTANSI
+  AKUNTANSI
+  BISNIS_DIGITAL
+  MANAJEMEN
+}
