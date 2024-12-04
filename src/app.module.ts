@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { MajorModule } from './major/major.module';
 import { PrismaModule } from './prisma/prisma.module';
 
-
 @Module({
   imports: [MajorModule, PrismaModule],
   controllers: [AppController],
