@@ -13,9 +13,91 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// For user account university
+model User {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId 
+  name          String
+  email         String       @unique
+  student_id    String       @unique
+  otp           String
+  role          Role
+  password      String
+  majorId       String       @map("major_id")    @db.ObjectId
+  createdAt     DateTime     @default(now())      @map("created_at")
+  updatedAt     DateTime     @map("updated_at")
+}
+
+// For major university
 model Major {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  major MajorType
+  id           String       @id @default(auto())  @map("_id") @db.ObjectId
+  major        MajorType
+}
+
+// For User Competition University
+model Competition {
+  id           String       @id @default(auto())     @map("_id") @db.ObjectId 
+  title        String    
+  description  String?
+  category     String    
+  level        Level
+  type         Type
+  imagePoster  String?      @map("image_poster")
+  startDate    DateTime     @map("start_date")
+  endDate      DateTime     @map("end_date")
+  createdAt    DateTime     @default(now())         @map("created_at")
+  updatedAt    DateTime     @updatedAt              @map("updated_at")
+  userId       String       @map("user_id")         @db.ObjectId
+}
+
+model Team {
+  id            String      @id @default(auto())    @map("_id") @db.ObjectId 
+  name          String      @unique
+  competitionId String      @map("competition_id")  @db.ObjectId
+  leaderId      String      @map("leader_id")       @db.ObjectId
+  createdAt     DateTime    @default(now())         @map("created_at")
+  updatedAt     DateTime    @map("updated_at")
+}
+
+model Team_Members {
+  id            String      @id @default(auto())  @map("_id") @db.ObjectId
+  team_id       String      @map("team_id")       @db.ObjectId
+  user_id       String      @map("user_id")       @db.ObjectId
+  createdAt     DateTime    @default(now())       @map("created_at")
+  updatedAt     DateTime    @map("updated_at")
+}
+
+model Achievements {
+  id              String    @id @default(auto())   @map("_id") @db.ObjectId
+  userId          String    @map("user_id")        @db.ObjectId
+  competitionId   String    @map("competition_id") @db.ObjectId
+  rank            Rank
+  certificate_url String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @map("updated_at") 
+}
+
+model Reimbursement {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @map("user_id") @db.ObjectId
+  competitionId   String    @map("competition_id") @db.ObjectId
+  teamId          String    @map("team_id") @db.ObjectId
+  amount          Int
+  currency        String    @default("IDR")
+  reason          String    
+  status          Status
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @map("updated_at")
+}
+
+enum Level {
+  Provinsi
+  Nasional
+  Internasional
+}
+
+enum Type {
+  Individu
+  Team
 }
 
 enum MajorType {
@@ -25,4 +107,25 @@ enum MajorType {
   AKUNTANSI
   BISNIS_DIGITAL
   MANAJEMEN
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum Rank {
+  PESERTA
+  FINALIS
+  JUARA_FAVORIT
+  JUARA_3
+  JUARA_2
+  JUARA_1
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
 }

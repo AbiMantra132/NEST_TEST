@@ -10,4 +10,5 @@ export class MajorController {
   async getAllMajor(): Promise<Major[]> {
     return this.majorService.getAllMajor();
   }
+
 }
