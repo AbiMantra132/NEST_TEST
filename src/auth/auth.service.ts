@@ -74,12 +74,12 @@ export class AuthService {
     const token = this.generateToken(user);
 
     // Set JWT token in HTTP-only cookie
-    response.cookie('jwt', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    // response.cookie('jwt', token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: 'strict',
+    //   maxAge: 24 * 60 * 60 * 1000,
+    // });
 
     return { user };
   }
@@ -109,7 +109,7 @@ export class AuthService {
     }
 
     // Generate JWT token
-    const token = this.generateToken(user);
+    const token =  this.generateToken(user);
 
     // Set JWT token in HTTP-only cookie
     response.cookie('jwt', token, {
