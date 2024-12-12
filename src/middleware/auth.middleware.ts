@@ -11,7 +11,7 @@ export class AuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     try {
       // Get the token from cookies
-      const token = req.cookies['jwt'];
+      const token = req.cookies['auth-token'];
 
       if (!token) {
         throw new UnauthorizedException('No token provided');

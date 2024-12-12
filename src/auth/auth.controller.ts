@@ -1,5 +1,6 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
-import { Response as ExpressResponse } from 'express';
+import { Controller, Post, Body, Res, Req, Get } from '@nestjs/common';
+import { Response as ExpressResponse, Request as ExpressRequest } from 'express';
+import { UnauthorizedException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import {
   SignupDto,
@@ -8,27 +9,75 @@ import {
   ResetPasswordDto,
 } from './dto/index';
 import { AuthService } from './auth.service';
+import * as jwt from 'jsonwebtoken';
+
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('/verify')
+  async verify(
+    @Req() request: ExpressRequest,
+    @Res({ passthrough: true }) response: ExpressResponse,
+  ) {
+    const token = request.cookies['auth-token'];
+
+    if (!token) {
+      throw new UnauthorizedException('No token provided');
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    console.log(decoded);
+
+    if (decoded) {
+      request['user'] = decoded;
+      return response.status(200).json({ loggedIn: true, user: decoded });
+    }
+
+    return response.status(401).json({ loggedIn: false });
+  }
 
   @Post('/signup')
   async signup(
     @Body() signupDto: SignupDto,
     @Res({ passthrough: true }) response: ExpressResponse,
   ) {
-    const user: User = await this.authService.signup(signupDto);
-    const token = this.authService.generateToken(user);
+    try {
+      const user: User = await this.authService.signup(signupDto);
+      const token = this.authService.generateToken(user);
 
-    response.cookie('jwt', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+      response.cookie('auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
 
-    return { msg: 'Success Registering Account' };
+      return {
+        success: true,
+        message: 'Account registered successfully',
+        user: {
+          id: user.id,
+          student_id: user.student_id,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      if (error.code === 'P2002') {
+        throw new ConflictException('Student_Id already exists');
+      }
+
+      console.error('Signup error:', error);
+
+      throw new InternalServerErrorException(
+        'Unable to process signup request',
+      );
+    }
   }
 
   @Post('/login')
@@ -36,17 +85,40 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: ExpressResponse,
   ) {
-    const user: User = await this.authService.login(loginDto);
-    const token = this.authService.generateToken(user);
+    try {
+      const user: User = await this.authService.login(loginDto);
+      const token = this.authService.generateToken(user);
+  
+      response.cookie('auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+  
+       return {
+        success: true,
+        message: 'Account registered successfully',
+        user: {
+          id: user.id,
+          student_id: user.student_id,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
 
-    response.cookie('jwt', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+      if (error.code === 'P2002') {
+        throw new ConflictException('Student_Id already exists');
+      }
 
-    return { msg: 'Success Registering Account' };
+      console.error('Login error:', error);
+
+      throw new InternalServerErrorException(
+        'Unable to process login request',
+      );
+    }
   }
 
   // @Post('forgot-password')
