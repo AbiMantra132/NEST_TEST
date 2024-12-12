@@ -52,8 +52,8 @@ export class AuthService {
     // nim validation
     if (nim.length !== 10)
       throw new BadRequestException('Nim Inputed Is Not Valid', {
-        cause: new Error('please input the valid email given by Primakara'),
-        description: 'Email is Invalid',
+        cause: new Error('please input a valid nim'),
+        description: 'nim is invalid',
       });
 
     // Create the user
