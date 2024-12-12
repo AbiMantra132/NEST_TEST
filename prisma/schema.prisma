@@ -22,6 +22,7 @@ model User {
   otp           String
   role          Role
   password      String
+  cohort        String
   majorId       String       @map("major_id")    @db.ObjectId
   createdAt     DateTime     @default(now())      @map("created_at")
   updatedAt     DateTime     @map("updated_at")

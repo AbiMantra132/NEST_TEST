@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Response } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { User } from '@prisma/client';
 import {
@@ -14,7 +14,10 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/signup')
-  async signup(@Body() signupDto: SignupDto, @Response() response: ExpressResponse) {
+  async signup(
+    @Body() signupDto: SignupDto,
+    @Res({ passthrough: true }) response: ExpressResponse,
+  ) {
     const user: User = await this.authService.signup(signupDto);
     const token = this.authService.generateToken(user);
 
@@ -29,7 +32,10 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(@Body() loginDto: LoginDto, @Response() response: ExpressResponse) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: ExpressResponse,
+  ) {
     const user: User = await this.authService.login(loginDto);
     const token = this.authService.generateToken(user);
 
