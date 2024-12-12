@@ -123,71 +123,67 @@ export class AuthService {
   }
 
 
-  // async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
-  //   const { email } = forgotPasswordDto;
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
+    const { email } = forgotPasswordDto;
 
-  //   // Find the user
-  //   const user = await this.prisma.user.findUnique({ where: { email } });
-  //   if (!user) {
-  //     throw new UnauthorizedException('Email not found.');
-  //   }
+    // Find the user
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new UnauthorizedException('Email not found.');
+    }
 
-  //   // Generate OTP
-  //   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  //   // Update user with OTP
-  //   await this.prisma.user.update({ where: { email }, data: { otp } });
+    // Update user with OTP
+    await this.prisma.user.update({ where: { email }, data: { otp } });
 
-  //   // Send OTP via email
-  //   await this.sendEmail(email, 'Password Reset OTP', `Your OTP is: ${otp}`);
-  // }
+    // Send OTP via email
+    await this.sendEmail(email, 'Password Reset OTP', `Your OTP is: ${otp}`);
+  }
 
-  // async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
-  //   const { email, otp, newPassword } = resetPasswordDto;
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
+    const { email, otp, newPassword } = resetPasswordDto;
 
-  //   // Find the user
-  //   const user = await this.prisma.user.findUnique({ where: { email } });
-  //   if (!user || user.otp !== otp) {
-  //     throw new UnauthorizedException('Invalid OTP.');
-  //   }
+    // Find the user
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || user.otp !== otp) {
+      throw new UnauthorizedException('Invalid OTP.');
+    }
 
-  //   // Hash the new password
-  //   const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  //   // Update user with new password and clear OTP
-  //   await this.prisma.user.update({
-  //     where: { email },
-  //     data: { password: hashedPassword, otp: '' },
-  //   });
-  // }
+    // Update user with new password and clear OTP
+    await this.prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword, otp: '' },
+    });
+  }
 
   private generateToken(user: User): string {
     const payload = { sub: user.id, email: user.student_id, role: user.role };
     return this.jwtService.sign(payload);
   }
 
-  // private async sendEmail(
-  //   to: string,
-  //   subject: string,
-  //   text: string,
-  // ): Promise<void> {
-  //   const transporter = nodemailer.createTransport({
-  //     service: 'Gmail',
-  //     auth: {
-  //       user: process.env.SMTP_EMAIL,
-  //       pass: process.env.SMTP_PASSWORD,
-  //     },
-  //   });
+  private async sendEmail(
+    to: string,
+    subject: string,
+    text: string,
+  ): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
 
-  //   await transporter.sendMail({
-  //     from: process.env.SMTP_EMAIL,
-  //     to,
-  //     subject,
-  //     text,
-  //   });
-  // }
-
-  // private async generateOTPToken() {
-
-  // }
+    await transporter.sendMail({
+      from: process.env.SMTP_EMAIL,
+      to,
+      subject,
+      text,
+    });
+  }
 }
