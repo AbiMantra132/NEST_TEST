@@ -47,8 +47,6 @@ export class AuthController {
 
       response.cookie('auth-token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
@@ -60,6 +58,7 @@ export class AuthController {
           student_id: user.student_id,
         },
       };
+
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -88,8 +87,6 @@ export class AuthController {
   
       response.cookie('auth-token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
   
