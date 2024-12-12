@@ -7,7 +7,7 @@ async function bootstrap() {
 
   app.use(cookieParser());
   app.enableCors({
-    origin: 'https://tugas-akhir-web-lomba.vercel.app/',
+    origin: 'https://tugas-akhir-web-lomba.vercel.app',
     credentials: true,
   });
 
