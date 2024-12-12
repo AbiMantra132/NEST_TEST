@@ -25,7 +25,7 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto): Promise<User> {
-    const { name, email, password, nim, major } = signupDto;
+    const { name, email, password, nim, major, cohort } = signupDto;
 
     // Check if user exists
     const existingUser = await this.prisma.user.findUnique({
@@ -60,6 +60,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         role: 'USER', 
+        cohort: cohort,
         otp: '',
         student_id: nim,
         majorId: Usermajor.id,
