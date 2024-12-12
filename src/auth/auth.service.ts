@@ -3,7 +3,6 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,6 +16,7 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
 } from './dto/index';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -25,12 +25,14 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto): Promise<{ token: string, user: User }> {
+  async signup(signupDto: SignupDto, response: Response): Promise<{
+    user: User;
+  }> {
     const { name, email, password, nim, major } = signupDto;
 
     // Check if user exists
     const existingUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: { student_id: nim },
     });
 
     if (existingUser) {
@@ -40,18 +42,19 @@ export class AuthService {
     // Find the major
     const Usermajor = await this.prisma.major.findFirst({
       where: {
-        major: major as MajorType
-      }
+        major: major as MajorType,
+      },
     });
 
     // Hash the password
     const hashedPassword: string = await bcrypt.hash(password, 10);
 
     // nim validation
-    if(nim.length !== 10) throw new BadRequestException('Nim Inputed Is Not Valid', {
-      cause: new Error('please input the valid email given by Primakara'),
-      description: "Email is Invalid"
-    });
+    if (nim.length !== 10)
+      throw new BadRequestException('Nim Inputed Is Not Valid', {
+        cause: new Error('please input the valid email given by Primakara'),
+        description: 'Email is Invalid',
+      });
 
     // Create the user
     const user = await this.prisma.user.create({
@@ -59,7 +62,7 @@ export class AuthService {
         name: name,
         email,
         password: hashedPassword,
-        role: 'USER', // Default role
+        role: 'USER', 
         otp: '',
         student_id: nim,
         majorId: Usermajor.id,
@@ -70,29 +73,55 @@ export class AuthService {
     // Generate JWT token
     const token = this.generateToken(user);
 
-    return { token, user };
+    // Set JWT token in HTTP-only cookie
+    response.cookie('jwt', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    return { user };
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string, status: string }> {
-    const { email, password } = loginDto;
+  async login(
+    loginDto: LoginDto,
+    response: Response
+  ): Promise<{ status: string }> {
+    const { nim, password } = loginDto;
+
+    if (nim.length === 0 || password.length === 0)
+      throw new UnauthorizedException('Invalid student id or password.');
 
     // Find the user
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({
+      where: { student_id: nim },
+    });
+
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password.');
+      throw new UnauthorizedException('Invalid student id or password.');
     }
 
     // Validate the password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password.');
+      throw new UnauthorizedException('Invalid student id or password.');
     }
 
     // Generate JWT token
     const token = this.generateToken(user);
 
-    return { token, status: "Logged In" };
+    // Set JWT token in HTTP-only cookie
+    response.cookie('jwt', token, {
+      httpOnly: true,
+      secure: true, 
+      sameSite: 'strict', 
+      maxAge: 24 * 60 * 60 * 1000, 
+    });
+
+    return { status: 'Logged In' };
   }
+
 
   // async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
   //   const { email } = forgotPasswordDto;
@@ -133,7 +162,7 @@ export class AuthService {
   // }
 
   private generateToken(user: User): string {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.student_id, role: user.role };
     return this.jwtService.sign(payload);
   }
 
