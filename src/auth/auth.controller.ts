@@ -1,5 +1,5 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Body, Response } from '@nestjs/common';
+import { Response as ExpressResponse } from 'express';
 import { User } from '@prisma/client';
 import {
   SignupDto,
@@ -14,7 +14,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/signup')
-  async signup(@Body() signupDto: SignupDto, @Res() response: Response) {
+  async signup(@Body() signupDto: SignupDto, @Response() response: ExpressResponse) {
     const user: User = await this.authService.signup(signupDto);
     const token = this.authService.generateToken(user);
 
@@ -25,11 +25,11 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    return {msg: "Success Registering Account"}
+    return { msg: 'Success Registering Account' };
   }
 
   @Post('/login')
-  async login(@Body() loginDto: LoginDto, @Res() response: Response) {
+  async login(@Body() loginDto: LoginDto, @Response() response: ExpressResponse) {
     const user: User = await this.authService.login(loginDto);
     const token = this.authService.generateToken(user);
 
@@ -40,7 +40,7 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    return { msg: 'Successfuly Logged In' };
+    return { msg: 'Success Registering Account' };
   }
 
   // @Post('forgot-password')
