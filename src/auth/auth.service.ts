@@ -16,7 +16,6 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
 } from './dto/index';
-import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -25,9 +24,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto, response: Response): Promise<{
-    user: User;
-  }> {
+  async signup(signupDto: SignupDto): Promise<User> {
     const { name, email, password, nim, major } = signupDto;
 
     // Check if user exists
@@ -70,24 +67,13 @@ export class AuthService {
       },
     });
 
-    // Generate JWT token
-    const token = this.generateToken(user);
 
-    // Set JWT token in HTTP-only cookie
-    // response.cookie('jwt', token, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: 'strict',
-    //   maxAge: 24 * 60 * 60 * 1000,
-    // });
-
-    return { user };
+    return user;
   }
 
   async login(
-    loginDto: LoginDto,
-    response: Response
-  ): Promise<{ status: string }> {
+    loginDto: LoginDto
+  ): Promise<User> {
     const { nim, password } = loginDto;
 
     if (nim.length === 0 || password.length === 0)
@@ -108,18 +94,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid student id or password.');
     }
 
-    // Generate JWT token
-    const token =  this.generateToken(user);
-
-    // Set JWT token in HTTP-only cookie
-    response.cookie('jwt', token, {
-      httpOnly: true,
-      secure: true, 
-      sameSite: 'strict', 
-      maxAge: 24 * 60 * 60 * 1000, 
-    });
-
-    return { status: 'Logged In' };
+    return user;
   }
 
 
@@ -161,7 +136,7 @@ export class AuthService {
     });
   }
 
-  private generateToken(user: User): string {
+  generateToken(user: User): string {
     const payload = { sub: user.id, email: user.student_id, role: user.role };
     return this.jwtService.sign(payload);
   }
