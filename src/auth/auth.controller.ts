@@ -95,7 +95,7 @@ export class AuthController {
   
        return {
         success: true,
-        message: 'Account registered successfully',
+        message: 'Account loggedin successfully',
         user: {
           id: user.id,
           student_id: user.student_id,
