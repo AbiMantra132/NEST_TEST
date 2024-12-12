@@ -19,7 +19,7 @@ export class AuthController {
   @Get('/verify')
   async verify(
     @Req() request: ExpressRequest,
-    @Res({ passthrough: true }) response: ExpressResponse,
+    @Res() response: ExpressResponse,
   ) {
     const token = request.cookies['auth-token'];
 
@@ -29,10 +29,7 @@ export class AuthController {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log(decoded);
-
     if (decoded) {
-      request['user'] = decoded;
       return response.status(200).json({ loggedIn: true, user: decoded });
     }
 
