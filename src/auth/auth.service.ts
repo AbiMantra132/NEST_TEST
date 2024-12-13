@@ -25,99 +25,66 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  // Method to handle user signup
   async signup(signupDto: SignupDto): Promise<User> {
     const { name, email, password, nim, major, cohort } = signupDto;
 
-    // Check if user exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { student_id: nim },
-    });
+    await this.checkUserExists(nim);
+    const Usermajor = await this.findMajor(major);
+    this.validateNim(nim);
 
-    if (existingUser) {
-      throw new ConflictException('Email is already in use.');
-    }
-
-    // Find the major
-    const Usermajor = await this.prisma.major.findFirst({
-      where: {
-        major: major as MajorType,
-      },
-    });
-
-    // Hash the password
     const hashedPassword: string = await bcrypt.hash(password, 10);
 
-    // nim validation
-    if (nim.length !== 10)
-      throw new BadRequestException('Nim Inputed Is Not Valid', {
-        cause: new Error('please input a valid nim'),
-        description: 'nim is invalid',
-      });
-
-    // Create the user
-    const user = await this.prisma.user.create({
-      data: {
-        name: name,
-        email,
-        password: hashedPassword,
-        role: 'USER',
-        cohort: cohort,
-        otp: '',
-        student_id: nim,
-        majorId: Usermajor.id,
-        updatedAt: new Date(),
-      },
+    const user = await this.createUser({
+      name,
+      email,
+      password: hashedPassword,
+      cohort,
+      nim,
+      majorId: Usermajor.id,
     });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await this.prisma.user.update({
-      where: { student_id: user.student_id },
-      data: { otp },
-    });
-
+    const otp = this.generateOtp();
+    await this.updateUserOtp(user.student_id, otp);
     await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
 
     return user;
   }
 
+  // Method to handle user login
   async login(loginDto: LoginDto): Promise<User> {
     const { nim, password } = loginDto;
 
-    if (nim.length === 0 || password.length === 0)
+    if (!nim || !password) {
       throw new UnauthorizedException('Invalid student id or password.');
+    }
 
     const user = await this.prisma.user.findUnique({
       where: { student_id: nim },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid student id or password.');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid student id or password.');
     }
 
     return user;
   }
 
+  // Method to handle forgot password
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
-    const { email } = forgotPasswordDto;
+    const { student_id } = forgotPasswordDto;
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { student_id } });
     if (!user) {
       throw new UnauthorizedException('Email not found.');
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await this.prisma.user.update({ where: { email }, data: { otp } });
-
-    await this.sendEmail(email, 'Password Reset OTP', `Your OTP is: ${otp}`);
+    const otp = this.generateOtp();
+    await this.updateUserOtp(student_id, otp);
+    await this.sendEmail(student_id, 'Password Reset OTP', `Your OTP is: ${otp}`);
   }
 
+  // Method to handle password reset
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
     const { email, otp, newPassword } = resetPasswordDto;
 
@@ -127,31 +94,118 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     await this.prisma.user.update({
       where: { email },
       data: { password: hashedPassword, otp: '' },
     });
   }
 
-  async deleteOtp(studentId: string): Promise<string> {
+  // Method to request OTP
+  async requestOTP(studentId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
+    if (!user) {
+      throw new UnauthorizedException('Student ID not found.');
+    }
+
+    const otp = this.generateOtp();
+    await this.updateUserOtp(studentId, otp);
+    await this.sendEmail(user.email, 'Your OTP Code', `Your OTP is: ${otp}`);
+  }
+
+  // Method to reset OTP
+  async resetOTP(studentId: string): Promise<User> {
     try {
-      await this.prisma.user.update({
+      return await this.prisma.user.update({
         where: { student_id: studentId },
         data: { otp: '' },
       });
-      return 'OTP is deleted from user';
     } catch (error) {
       console.error('Error deleting OTP:', error);
       throw new InternalServerErrorException('Unable to delete OTP');
     }
   }
 
+  // Method to verify OTP
+  async verifyOtp(studentId: string, otp: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
+
+    if (!user || user.otp !== otp) {
+      throw new UnauthorizedException('Invalid OTP.');
+    }
+
+    await this.prisma.user.update({
+      where: { student_id: studentId },
+      data: { otp: '' },
+    });
+
+    return true;
+  }
+
+  // Method to generate JWT token
   generateToken(user: User): string {
     const payload = { user };
     return this.jwtService.sign(payload);
   }
 
+  // Method to check if user already exists
+  private async checkUserExists(nim: string): Promise<void> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { student_id: nim },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('NIM is already in use.');
+    }
+  }
+
+  // Method to find major by name
+  private async findMajor(major: string): Promise<any> {
+    return await this.prisma.major.findFirst({
+      where: { major: major as MajorType },
+    });
+  }
+
+  // Method to validate NIM
+  private validateNim(nim: string): void {
+    if (nim.length !== 10) {
+      throw new BadRequestException('Nim Inputed Is Not Valid', {
+        cause: new Error('please input a valid nim'),
+        description: 'nim is invalid',
+      });
+    }
+  }
+
+  // Method to create a new user
+  private async createUser(data: any): Promise<User> {
+    return await this.prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: 'USER',
+        cohort: data.cohort,
+        otp: '',
+        student_id: data.nim,
+        majorId: data.majorId,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  // Method to generate OTP
+  private generateOtp(): string {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  // Method to update user OTP
+  private async updateUserOtp(studentId: string, otp: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { student_id: studentId },
+      data: { otp },
+    });
+  }
+
+  // Method to send email
   private async sendEmail(
     to: string,
     subject: string,

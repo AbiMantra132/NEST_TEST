@@ -7,6 +7,7 @@ import {
   LoginDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  OtpDto
 } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
@@ -112,6 +113,49 @@ export class AuthController {
       throw new InternalServerErrorException(
         'Unable to process login request',
       );
+    }
+  }
+  
+
+  @Post('/request-otp')
+  async requestOtp(@Body() otpDto: OtpDto) {
+    try {
+      await this.authService.requestOTP(otpDto.nim);
+      return {
+        success: true,
+        message: 'OTP has been sent to your email.',
+      };
+    } catch (error) {
+      console.error('Request OTP error:', error);
+      throw new InternalServerErrorException('Unable to request OTP');
+    }
+  }
+
+  @Post('/reset-otp')
+  async resetOtp(@Body() otpDto: OtpDto) {
+    try {
+      const user = await this.authService.resetOTP(otpDto.nim);
+      return {
+        user,
+        msg: 'OTP Reseted',
+      };
+    } catch (error) {
+      console.error('Reset OTP error:', error);
+      throw new InternalServerErrorException('Unable to reset OTP');
+    }
+  }
+
+  @Post('/verify-otp')
+  async verifyOtp(@Body() otpDto: OtpDto) {
+    try {
+      const isValid = await this.authService.verifyOtp(otpDto.nim, otpDto.otp);
+      return {
+        success: isValid,
+        message: isValid ? 'OTP verified successfully.' : 'Invalid OTP.',
+      };
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw new InternalServerErrorException('Unable to verify OTP');
     }
   }
 
