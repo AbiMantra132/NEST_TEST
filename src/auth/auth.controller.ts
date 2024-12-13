@@ -1,17 +1,23 @@
 import { Controller, Post, Body, Res, Req, Get } from '@nestjs/common';
-import { Response as ExpressResponse, Request as ExpressRequest } from 'express';
-import { UnauthorizedException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Response as ExpressResponse,
+  Request as ExpressRequest,
+} from 'express';
+import {
+  UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import {
   SignupDto,
   LoginDto,
   ForgotPasswordDto,
   ResetPasswordDto,
-  OtpDto
+  OtpDto,
 } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
-
 
 @Controller('auth')
 export class AuthController {
@@ -46,19 +52,12 @@ export class AuthController {
       const user: User = await this.authService.signup(signupDto);
       const token = this.authService.generateToken(user);
 
-      response.cookie('auth-token', token, {
-        httpOnly: true,
-        secure: true, 
-        sameSite: 'none', 
-        maxAge: 3600000, 
-      });
-
       return {
         success: true,
+        token: token,
         message: 'Account registered successfully',
-        user
+        user,
       };
-
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -85,19 +84,17 @@ export class AuthController {
       const user: User = await this.authService.login(loginDto);
       const token = this.authService.generateToken(user);
 
-      console.log(token)
-  
       response.cookie('auth-token', token, {
         httpOnly: true,
-        secure: true, 
-        sameSite: 'none', 
-        maxAge: 3600000, 
+        secure: true,
+        sameSite: 'none',
+        maxAge: 3600000,
       });
-  
-       return {
+
+      return {
         success: true,
         message: 'Account loggedin successfully',
-        user
+        user,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -110,12 +107,9 @@ export class AuthController {
 
       console.error('Login error:', error);
 
-      throw new InternalServerErrorException(
-        'Unable to process login request',
-      );
+      throw new InternalServerErrorException('Unable to process login request');
     }
   }
-  
 
   @Post('/request-otp')
   async requestOtp(@Body() otpDto: OtpDto) {
@@ -146,9 +140,22 @@ export class AuthController {
   }
 
   @Post('/verify-otp')
-  async verifyOtp(@Body() otpDto: OtpDto) {
+  async verifyOtp(
+    @Body() otpDto: OtpDto,
+    @Res({ passthrough: true }) response: ExpressResponse,
+  ) {
     try {
       const isValid = await this.authService.verifyOtp(otpDto.nim, otpDto.otp);
+
+      const token = this.authService.generateToken(isValid.user);
+
+      response.cookie('auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 3600000,
+      });
+      
       return {
         success: isValid,
         message: isValid ? 'OTP verified successfully.' : 'Invalid OTP.',

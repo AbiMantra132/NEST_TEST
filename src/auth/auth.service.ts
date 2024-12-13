@@ -126,7 +126,7 @@ export class AuthService {
   }
 
   // Method to verify OTP
-  async verifyOtp(studentId: string, otp: string): Promise<boolean> {
+  async verifyOtp(studentId: string, otp: string): Promise<{user: User, status: boolean}> {
     const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
 
     if (!user || user.otp !== otp) {
@@ -138,7 +138,7 @@ export class AuthService {
       data: { otp: '' },
     });
 
-    return true;
+    return {user, status: true};
   }
 
   // Method to generate JWT token
