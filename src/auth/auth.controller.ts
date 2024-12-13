@@ -55,10 +55,7 @@ export class AuthController {
       return {
         success: true,
         message: 'Account registered successfully',
-        user: {
-          id: user.id,
-          student_id: user.student_id,
-        },
+        user
       };
 
     } catch (error) {
@@ -99,10 +96,7 @@ export class AuthController {
        return {
         success: true,
         message: 'Account loggedin successfully',
-        user: {
-          id: user.id,
-          student_id: user.student_id,
-        },
+        user
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
