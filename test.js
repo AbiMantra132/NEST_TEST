@@ -1,5 +1,5 @@
 async function signup() {
-  const url = 'http://localhost:3000/auth/signup';
+  const url = 'https://lomba-backend.vercel.app/auth/signup';
   const data = {
     name: "Ida Bagus Dharma Abimantra",
     email: "adimantra123@gmail.com",

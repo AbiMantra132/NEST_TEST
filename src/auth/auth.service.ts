@@ -100,15 +100,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid student id or password.');
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await this.prisma.user.update({
-      where: { student_id: user.student_id },
-      data: { otp },
-    });
-
-    await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
-
     return user;
   }
 
