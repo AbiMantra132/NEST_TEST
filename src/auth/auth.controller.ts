@@ -47,7 +47,9 @@ export class AuthController {
 
       response.cookie('auth-token', token, {
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: true, 
+        sameSite: 'none', 
+        maxAge: 3600000, 
       });
 
       return {
@@ -84,10 +86,14 @@ export class AuthController {
     try {
       const user: User = await this.authService.login(loginDto);
       const token = this.authService.generateToken(user);
+
+      console.log(token)
   
       response.cookie('auth-token', token, {
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: true, 
+        sameSite: 'none', 
+        maxAge: 3600000, 
       });
   
        return {

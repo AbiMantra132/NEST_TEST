@@ -1,13 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';1
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
   app.enableCors({
-    origin: 'https://tugas-akhir-web-lomba.vercel.app',
+    origin: [
+      'http://localhost:3000',
+      'https://tugas-akhir-web-lomba.vercel.app',
+    ],
     credentials: true,
   });
 
