@@ -86,16 +86,16 @@ export class AuthService {
 
   // Method to handle password reset
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
-    const { email, otp, newPassword } = resetPasswordDto;
+    const { student_id, otp, newPassword } = resetPasswordDto;
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { student_id} });
     if (!user || user.otp !== otp) {
       throw new UnauthorizedException('Invalid OTP.');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
-      where: { email },
+      where: { student_id },
       data: { password: hashedPassword, otp: '' },
     });
   }
