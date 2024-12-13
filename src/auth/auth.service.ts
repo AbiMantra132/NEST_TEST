@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -59,7 +60,7 @@ export class AuthService {
         name: name,
         email,
         password: hashedPassword,
-        role: 'USER', 
+        role: 'USER',
         cohort: cohort,
         otp: '',
         student_id: nim,
@@ -68,19 +69,24 @@ export class AuthService {
       },
     });
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await this.prisma.user.update({
+      where: { student_id: user.student_id },
+      data: { otp },
+    });
+
+    await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
 
     return user;
   }
 
-  async login(
-    loginDto: LoginDto
-  ): Promise<User> {
+  async login(loginDto: LoginDto): Promise<User> {
     const { nim, password } = loginDto;
 
     if (nim.length === 0 || password.length === 0)
       throw new UnauthorizedException('Invalid student id or password.');
 
-    // Find the user
     const user = await this.prisma.user.findUnique({
       where: { student_id: nim },
     });
@@ -89,52 +95,65 @@ export class AuthService {
       throw new UnauthorizedException('Invalid student id or password.');
     }
 
-    // Validate the password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid student id or password.');
     }
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await this.prisma.user.update({
+      where: { student_id: user.student_id },
+      data: { otp },
+    });
+
+    await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
+
     return user;
   }
-
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
     const { email } = forgotPasswordDto;
 
-    // Find the user
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new UnauthorizedException('Email not found.');
     }
 
-    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Update user with OTP
     await this.prisma.user.update({ where: { email }, data: { otp } });
 
-    // Send OTP via email
     await this.sendEmail(email, 'Password Reset OTP', `Your OTP is: ${otp}`);
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
     const { email, otp, newPassword } = resetPasswordDto;
 
-    // Find the user
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user || user.otp !== otp) {
       throw new UnauthorizedException('Invalid OTP.');
     }
 
-    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update user with new password and clear OTP
     await this.prisma.user.update({
       where: { email },
       data: { password: hashedPassword, otp: '' },
     });
+  }
+
+  async deleteOtp(studentId: string): Promise<string> {
+    try {
+      await this.prisma.user.update({
+        where: { student_id: studentId },
+        data: { otp: '' },
+      });
+      return 'OTP is deleted from user';
+    } catch (error) {
+      console.error('Error deleting OTP:', error);
+      throw new InternalServerErrorException('Unable to delete OTP');
+    }
   }
 
   generateToken(user: User): string {
@@ -147,19 +166,44 @@ export class AuthService {
     subject: string,
     text: string,
   ): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        port: 465,
+        logger: true,
+        debug: true,
+        secure: true,
+        auth: {
+          user: 'asia.codepedia@gmail.com',
+          pass: 'eswpouseqnuxccfb',
+        },
+        tls: {
+          rejectUnauthorized: true
+        }
+      });
 
-    await transporter.sendMail({
-      from: process.env.SMTP_EMAIL,
-      to,
-      subject,
-      text,
-    });
+      const mailOptions = {
+        to,
+        subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2 style="color: #333;">Verifikasi OTP</h2>
+            <p>Pengguna yang terhormat,</p>
+            <p>Terima kasih telah mendaftar. Silakan gunakan OTP berikut untuk menyelesaikan proses verifikasi Anda:</p>
+            <p style="font-size: 24px; font-weight: bold; color: #333;">${text}</p>
+            <p>Jika Anda tidak melakukan tahap apapun dalam website lomba primakara, harap abaikan email ini.</p>
+            <p>Salam hormat,<br/>Tim Primakara Lomba</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw new InternalServerErrorException(
+        'Failed to send email. Please try again later.',
+      );
+    }
   }
 }
