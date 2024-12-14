@@ -236,8 +236,8 @@ export class AuthService {
         debug: true,
         secure: true,
         auth: {
-          user: 'asia.codepedia@gmail.com',
-          pass: 'eswpouseqnuxccfb',
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
         },
         tls: {
           rejectUnauthorized: true
