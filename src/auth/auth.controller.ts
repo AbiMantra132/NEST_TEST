@@ -22,7 +22,7 @@ import { User } from '@prisma/client';
 import { SignupDto, LoginDto, OtpDto, UploadProfileDto } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
-import MulterOptions from '..multer.config';
+import MulterOptions from '../config/multer.config';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
