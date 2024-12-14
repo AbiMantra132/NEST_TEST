@@ -17,7 +17,6 @@ import {
   UploadProfileDto
 } from './dto/index';
 import cloudinary from 'src/config/cloudinary.config';
-import upload from 'src/config/multer.config';
 
 @Injectable()
 export class AuthService {
