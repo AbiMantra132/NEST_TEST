@@ -168,20 +168,23 @@ export class AuthService {
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
     file: Express.Multer.File,
-    uploadProfile: UploadProfileDto,
+    uploadProfileDto: UploadProfileDto,
   ): Promise<User> {
     try {
       const result = await cloudinary.uploader.upload(file.path, {
         folder: 'user_profile',
       });
 
-      const user = await this.postNameAndGender(
-        result.secure_url,
-        uploadProfile.nim,
-        uploadProfile.firstName,
-        uploadProfile.lastName,
-        uploadProfile.gender,
-      );
+      // Update the user profile with the image URL
+      const user = await this.prisma.user.update({
+        where: { student_id: uploadProfileDto.nim },
+        data: {
+          profileImage: result.secure_url,
+          firstName: uploadProfileDto.firstName,
+          lastName: uploadProfileDto.lastName,
+          gender: uploadProfileDto.gender,
+        },
+      });
 
       return user;
     } catch (error) {
@@ -192,33 +195,7 @@ export class AuthService {
     }
   }
 
-  // Method to post updated data to database
-  private async postNameAndGender(
-    url: string,
-    nim: string,
-    first_name: string,
-    last_name: string,
-    gender: string,
-  ): Promise<User> {
-    try {
-      const user = await this.prisma.user.update({
-        data: {
-          profileImage: url,
-          firstName: first_name,
-          lastName: last_name,
-          gender: gender,
-        },
-        where: { student_id: nim },
-      });
-
-      return user;
-    } catch (error) {
-      console.error('Error posting first_name and last_name:', error);
-      throw new InternalServerErrorException(
-        'Failed to post first_name and last_name. Please try again later.',
-      );
-    }
-  }
+  
   // Method to delete image profile from Cloudinary
   // async deleteImageProfile(nim: string): Promise<User> {
   //   try {
