@@ -14,9 +14,10 @@ import { MajorType } from '@prisma/client';
 import {
   SignupDto,
   LoginDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
+  UploadProfileDto
 } from './dto/index';
+import cloudinary from 'src/config/cloudinary.config';
+import upload from 'src/config/multer.config';
 
 @Injectable()
 export class AuthService {
@@ -70,36 +71,6 @@ export class AuthService {
     return user;
   }
 
-  // Method to handle forgot password
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
-    const { student_id } = forgotPasswordDto;
-
-    const user = await this.prisma.user.findUnique({ where: { student_id } });
-    if (!user) {
-      throw new UnauthorizedException('Email not found.');
-    }
-
-    const otp = this.generateOtp();
-    await this.updateUserOtp(student_id, otp);
-    await this.sendEmail(student_id, 'Password Reset OTP', `Your OTP is: ${otp}`);
-  }
-
-  // Method to handle password reset
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
-    const { student_id, otp, newPassword } = resetPasswordDto;
-
-    const user = await this.prisma.user.findUnique({ where: { student_id} });
-    if (!user || user.otp !== otp) {
-      throw new UnauthorizedException('Invalid OTP.');
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.prisma.user.update({
-      where: { student_id },
-      data: { password: hashedPassword, otp: '' },
-    });
-  }
-
   // Method to request OTP
   async requestOTP(studentId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
@@ -140,6 +111,7 @@ export class AuthService {
 
     return {user, status: true};
   }
+  
 
   // Method to generate JWT token
   generateToken(user: User): string {
@@ -191,6 +163,51 @@ export class AuthService {
       },
     });
   }
+
+  // Method to upload image profile to Cloudinary
+  async uploadImageProfile(file: Express.Multer.File, uploadProfile: UploadProfileDto): Promise<User> {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'user_profile',
+      });
+
+      return await this.prisma.user.update({where: {student_id: uploadProfile.nim}, data: {profileImage: result.secure_url, firstName: uploadProfile.firstName, lastName: uploadProfile.lastName}});
+    } catch (error) {
+      console.error('Error uploading image to Cloudinary:', error);
+      throw new InternalServerErrorException('Failed to upload image. Please try again later.');
+    }
+  }
+
+  // Method to delete image profile from Cloudinary
+  async deleteImageProfile(nim: string): Promise<User> {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { student_id: nim } });
+      if (!user) {
+        throw new UnauthorizedException('Student ID not found.');
+      }
+
+      if (user.profileImage) {
+        const publicId = user.profileImage.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`user_profile/` + publicId);
+      }
+
+      return await this.prisma.user.update({ where: { student_id: nim }, data: { profileImage: '' } });
+    } catch (error) {
+      console.error('Error deleting image from Cloudinary:', error);
+      throw new InternalServerErrorException('Failed to delete image. Please try again later.');
+    }
+  }
+
+  // Method to post first_name and last_name
+  async postName(nim: string, first_name: string, last_name: string): Promise<User> {
+    try {
+      return await this.prisma.user.update({where: {student_id: nim}, data: {firstName: first_name, lastName: last_name}});
+    } catch (error) {
+      console.error('Error posting first_name and last_name:', error);
+      throw new InternalServerErrorException('Failed to post first_name and last_name. Please try again later.');
+    }
+  }
+
 
   // Method to generate OTP
   private generateOtp(): string {

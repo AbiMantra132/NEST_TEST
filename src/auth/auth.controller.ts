@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Res, Req, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  Get,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import {
   Response as ExpressResponse,
   Request as ExpressRequest,
@@ -7,17 +16,14 @@ import {
   UnauthorizedException,
   ConflictException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
-import {
-  SignupDto,
-  LoginDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-  OtpDto,
-} from './dto/index';
+import { SignupDto, LoginDto, OtpDto, UploadProfileDto } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
+import MulterOptions from 'src/config/multer.config';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthController {
@@ -88,7 +94,7 @@ export class AuthController {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
-        maxAge: 3600000,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
       return {
@@ -128,9 +134,8 @@ export class AuthController {
   @Post('/reset-otp')
   async resetOtp(@Body() otpDto: OtpDto) {
     try {
-      const user = await this.authService.resetOTP(otpDto.nim);
+      await this.authService.resetOTP(otpDto.nim);
       return {
-        user,
         msg: 'OTP Reseted',
       };
     } catch (error) {
@@ -153,9 +158,9 @@ export class AuthController {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
-        maxAge: 3600000,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       });
-      
+
       return {
         success: isValid,
         message: isValid ? 'OTP verified successfully.' : 'Invalid OTP.',
@@ -166,15 +171,48 @@ export class AuthController {
     }
   }
 
-  // @Post('forgot-password')
-  // async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-  //   await this.authService.forgotPassword(forgotPasswordDto);
-  //   return { message: 'OTP sent to email.' };
-  // }
+  @Post('/upload-profile')
+  @UseInterceptors(FileInterceptor('profile', MulterOptions))
+  async uploadProfile(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() UploadProfileDto: UploadProfileDto,
+    @Res() response: ExpressResponse,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
 
-  // @Post('reset-password')
-  // async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-  //   await this.authService.resetPassword(resetPasswordDto);
-  //   return { message: 'Password reset successful.' };
-  // }
+    try {
+      const user = await this.authService.uploadImageProfile(file, UploadProfileDto);
+      return response.status(200).json({
+        success: true,
+        message: 'Profile image uploaded successfully',
+        user,
+      });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw new InternalServerErrorException('Unable to upload image');
+    }
+  }
+
+  @Post('/delete-profile')
+  async deleteProfile(
+    @Body('nim') nim: string,
+    @Res() response: ExpressResponse,
+  ) {
+    if (!nim) {
+      throw new BadRequestException('User ID is required');
+    }
+
+    try {
+      await this.authService.deleteImageProfile(nim);
+      return response.status(200).json({
+        success: true,
+        message: 'Profile deleted successfully',
+      });
+    } catch (error) {
+      console.error('Delete profile error:', error);
+      throw new InternalServerErrorException('Unable to delete profile');
+    }
+  }
 }
