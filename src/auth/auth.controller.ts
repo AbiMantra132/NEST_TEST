@@ -145,9 +145,7 @@ export class AuthController {
   }
 
   @Post('/verify-otp')
-  async verifyOtp(
-    @Body() otpDto: OtpDto
-  ) {
+  async verifyOtp(@Body() otpDto: OtpDto) {
     try {
       const isValid = await this.authService.verifyOtp(otpDto.nim, otpDto.otp);
 
@@ -173,12 +171,7 @@ export class AuthController {
     }
 
     try {
-      const user = await this.authService.uploadImageProfile(
-        file,
-        UploadProfileDto,
-      );
-
-      await this.authService.postNameAndGender(UploadProfileDto.nim, UploadProfileDto.firstName, UploadProfileDto.lastName, UploadProfileDto.gender);
+      const user = await this.authService.uploadImageProfile(file, UploadProfileDto);
 
       const token = this.authService.generateToken(user);
 

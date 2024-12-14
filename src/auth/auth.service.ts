@@ -170,7 +170,14 @@ export class AuthService {
         folder: 'user_profile',
       });
 
-      return await this.prisma.user.update({where: {student_id: uploadProfile.nim}, data: {profileImage: result.secure_url, firstName: uploadProfile.firstName, lastName: uploadProfile.lastName}});
+     const user = this.postNameAndGender(
+       uploadProfile.nim,
+       uploadProfile.firstName,
+       uploadProfile.lastName,
+       uploadProfile.gender,
+     );
+
+     return user;
     } catch (error) {
       console.error('Error uploading image to Cloudinary:', error);
       throw new InternalServerErrorException('Failed to upload image. Please try again later.');
