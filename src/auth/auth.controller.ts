@@ -146,8 +146,7 @@ export class AuthController {
 
   @Post('/verify-otp')
   async verifyOtp(
-    @Body() otpDto: OtpDto,
-    @Res({ passthrough: true }) response: ExpressResponse,
+    @Body() otpDto: OtpDto
   ) {
     try {
       const isValid = await this.authService.verifyOtp(otpDto.nim, otpDto.otp);
