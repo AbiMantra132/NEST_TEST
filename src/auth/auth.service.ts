@@ -170,20 +170,32 @@ export class AuthService {
         folder: 'user_profile',
       });
 
-     const user = this.postNameAndGender(
+     const user = await this.postNameAndGender(
+       result.secure_url,
        uploadProfile.nim,
        uploadProfile.firstName,
        uploadProfile.lastName,
        uploadProfile.gender,
-     );
-
-     return user;
+      );
+      
+      return user;
     } catch (error) {
       console.error('Error uploading image to Cloudinary:', error);
       throw new InternalServerErrorException('Failed to upload image. Please try again later.');
     }
   }
+  
+  // Method to post updated data to database
+  private async postNameAndGender(url:string, nim: string, first_name: string, last_name: string, gender:string): Promise<User> {
+    try {
+      const user = await this.prisma.user.update({where: {student_id: nim}, data: {profileImage: url, firstName: first_name, lastName: last_name, gender: gender}});
 
+      return user;
+    } catch (error) {
+      console.error('Error posting first_name and last_name:', error);
+      throw new InternalServerErrorException('Failed to post first_name and last_name. Please try again later.');
+    }
+  }
   // Method to delete image profile from Cloudinary
   // async deleteImageProfile(nim: string): Promise<User> {
   //   try {
@@ -204,15 +216,6 @@ export class AuthService {
   //   }
   // }
 
-  // Method to post first_name and last_name
-  async postNameAndGender(nim: string, first_name: string, last_name: string, gender:string): Promise<User> {
-    try {
-      return await this.prisma.user.update({where: {student_id: nim}, data: {firstName: first_name, lastName: last_name, gender: gender}});
-    } catch (error) {
-      console.error('Error posting first_name and last_name:', error);
-      throw new InternalServerErrorException('Failed to post first_name and last_name. Please try again later.');
-    }
-  }
 
 
   // Method to generate OTP
