@@ -16,7 +16,7 @@ import {
   LoginDto,
   UploadProfileDto
 } from './dto/index';
-import { Cloudinary } from 'src/config/cloudinary.config';
+import { cloudinary } from '../config/cloudinary.config';
 
 @Injectable()
 export class AuthService {
@@ -166,7 +166,7 @@ export class AuthService {
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(file: Express.Multer.File, uploadProfile: UploadProfileDto): Promise<User> {
     try {
-      const result = await Cloudinary.uploader.upload(file.path, {
+      const result = await cloudinary.uploader.upload(file.path, {
         folder: 'user_profile',
       });
 
@@ -187,7 +187,7 @@ export class AuthService {
 
       if (user.profileImage) {
         const publicId = user.profileImage.split('/').pop().split('.')[0];
-        await Cloudinary.uploader.destroy(`user_profile/` + publicId);
+        await cloudinary.uploader.destroy(`user_profile/` + publicId);
       }
 
       return await this.prisma.user.update({ where: { student_id: nim }, data: { profileImage: '' } });
