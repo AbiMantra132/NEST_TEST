@@ -11,11 +11,7 @@ import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import { User } from '@prisma/client';
 import { MajorType } from '@prisma/client';
-import {
-  SignupDto,
-  LoginDto,
-  UploadProfileDto
-} from './dto/index';
+import { SignupDto, LoginDto, UploadProfileDto } from './dto/index';
 import { cloudinary } from '../config/cloudinary.config';
 
 @Injectable()
@@ -72,7 +68,9 @@ export class AuthService {
 
   // Method to request OTP
   async requestOTP(studentId: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
+    const user = await this.prisma.user.findUnique({
+      where: { student_id: studentId },
+    });
     if (!user) {
       throw new UnauthorizedException('Student ID not found.');
     }
@@ -96,8 +94,13 @@ export class AuthService {
   }
 
   // Method to verify OTP
-  async verifyOtp(studentId: string, otp: string): Promise<{user: User, status: boolean}> {
-    const user = await this.prisma.user.findUnique({ where: { student_id: studentId } });
+  async verifyOtp(
+    studentId: string,
+    otp: string,
+  ): Promise<{ user: User; status: boolean }> {
+    const user = await this.prisma.user.findUnique({
+      where: { student_id: studentId },
+    });
 
     if (!user || user.otp !== otp) {
       throw new UnauthorizedException('Invalid OTP.');
@@ -108,9 +111,8 @@ export class AuthService {
       data: { otp: '' },
     });
 
-    return {user, status: true};
+    return { user, status: true };
   }
-  
 
   // Method to generate JWT token
   generateToken(user: User): string {
@@ -164,36 +166,57 @@ export class AuthService {
   }
 
   // Method to upload image profile to Cloudinary
-  async uploadImageProfile(file: Express.Multer.File, uploadProfile: UploadProfileDto): Promise<User> {
+  async uploadImageProfile(
+    file: Express.Multer.File,
+    uploadProfile: UploadProfileDto,
+  ): Promise<User> {
     try {
       const result = await cloudinary.uploader.upload(file.path, {
         folder: 'user_profile',
       });
 
-     const user = await this.postNameAndGender(
-       result.secure_url,
-       uploadProfile.nim,
-       uploadProfile.firstName,
-       uploadProfile.lastName,
-       uploadProfile.gender,
+      const user = await this.postNameAndGender(
+        result.secure_url,
+        uploadProfile.nim,
+        uploadProfile.firstName,
+        uploadProfile.lastName,
+        uploadProfile.gender,
       );
-      
+
       return user;
     } catch (error) {
       console.error('Error uploading image to Cloudinary:', error);
-      throw new InternalServerErrorException('Failed to upload image. Please try again later.');
+      throw new InternalServerErrorException(
+        'Failed to upload image. Please try again later.',
+      );
     }
   }
-  
+
   // Method to post updated data to database
-  private async postNameAndGender(url:string, nim: string, first_name: string, last_name: string, gender:string): Promise<User> {
+  private async postNameAndGender(
+    url: string,
+    nim: string,
+    first_name: string,
+    last_name: string,
+    gender: string,
+  ): Promise<User> {
     try {
-      const user = await this.prisma.user.update({where: {student_id: nim}, data: {profileImage: url, firstName: first_name, lastName: last_name, gender: gender}});
+      const user = await this.prisma.user.update({
+        data: {
+          profileImage: url,
+          firstName: first_name,
+          lastName: last_name,
+          gender: gender,
+        },
+        where: { student_id: nim },
+      });
 
       return user;
     } catch (error) {
       console.error('Error posting first_name and last_name:', error);
-      throw new InternalServerErrorException('Failed to post first_name and last_name. Please try again later.');
+      throw new InternalServerErrorException(
+        'Failed to post first_name and last_name. Please try again later.',
+      );
     }
   }
   // Method to delete image profile from Cloudinary
@@ -215,8 +238,6 @@ export class AuthService {
   //     throw new InternalServerErrorException('Failed to delete image. Please try again later.');
   //   }
   // }
-
-
 
   // Method to generate OTP
   private generateOtp(): string {
@@ -249,8 +270,8 @@ export class AuthService {
           pass: process.env.SMTP_PASSWORD,
         },
         tls: {
-          rejectUnauthorized: true
-        }
+          rejectUnauthorized: true,
+        },
       });
 
       const mailOptions = {
@@ -265,7 +286,7 @@ export class AuthService {
             <p>Jika Anda tidak melakukan tahap apapun dalam website lomba primakara, harap abaikan email ini.</p>
             <p>Salam hormat,<br/>Tim Primakara Lomba</p>
           </div>
-        `
+        `,
       };
 
       await transporter.sendMail(mailOptions);
