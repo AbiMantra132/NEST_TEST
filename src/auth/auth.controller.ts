@@ -189,11 +189,11 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
-      return response.status(200).json({
+      return {
         success: true,
         message: 'Profile image uploaded successfully',
         user,
-      });
+      };
     } catch (error) {
       console.error('Image upload error:', error);
       throw new InternalServerErrorException('Unable to upload image');
