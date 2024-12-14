@@ -152,15 +152,6 @@ export class AuthController {
     try {
       const isValid = await this.authService.verifyOtp(otpDto.nim, otpDto.otp);
 
-      const token = this.authService.generateToken(isValid.user);
-
-      response.cookie('auth-token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-      });
-
       return {
         success: isValid,
         message: isValid ? 'OTP verified successfully.' : 'Invalid OTP.',
@@ -183,7 +174,22 @@ export class AuthController {
     }
 
     try {
-      const user = await this.authService.uploadImageProfile(file, UploadProfileDto);
+      const user = await this.authService.uploadImageProfile(
+        file,
+        UploadProfileDto,
+      );
+
+      await this.authService.postNameAndGender(UploadProfileDto.nim, UploadProfileDto.firstName, UploadProfileDto.lastName, UploadProfileDto.gender);
+
+      const token = this.authService.generateToken(user);
+
+      response.cookie('auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
       return response.status(200).json({
         success: true,
         message: 'Profile image uploaded successfully',
@@ -195,24 +201,24 @@ export class AuthController {
     }
   }
 
-  @Post('/delete-profile')
-  async deleteProfile(
-    @Body('nim') nim: string,
-    @Res() response: ExpressResponse,
-  ) {
-    if (!nim) {
-      throw new BadRequestException('User ID is required');
-    }
+  // @Post('/delete-profile')
+  // async deleteProfile(
+  //   @Body('nim') nim: string,
+  //   @Res() response: ExpressResponse,
+  // ) {
+  //   if (!nim) {
+  //     throw new BadRequestException('User ID is required');
+  //   }
 
-    try {
-      await this.authService.deleteImageProfile(nim);
-      return response.status(200).json({
-        success: true,
-        message: 'Profile deleted successfully',
-      });
-    } catch (error) {
-      console.error('Delete profile error:', error);
-      throw new InternalServerErrorException('Unable to delete profile');
-    }
-  }
+  //   try {
+  //     await this.authService.deleteImageProfile(nim);
+  //     return response.status(200).json({
+  //       success: true,
+  //       message: 'Profile deleted successfully',
+  //     });
+  //   } catch (error) {
+  //     console.error('Delete profile error:', error);
+  //     throw new InternalServerErrorException('Unable to delete profile');
+  //   }
+  // }
 }

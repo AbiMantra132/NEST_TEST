@@ -178,29 +178,29 @@ export class AuthService {
   }
 
   // Method to delete image profile from Cloudinary
-  async deleteImageProfile(nim: string): Promise<User> {
-    try {
-      const user = await this.prisma.user.findUnique({ where: { student_id: nim } });
-      if (!user) {
-        throw new UnauthorizedException('Student ID not found.');
-      }
+  // async deleteImageProfile(nim: string): Promise<User> {
+  //   try {
+  //     const user = await this.prisma.user.findUnique({ where: { student_id: nim } });
+  //     if (!user) {
+  //       throw new UnauthorizedException('Student ID not found.');
+  //     }
 
-      if (user.profileImage) {
-        const publicId = user.profileImage.split('/').pop().split('.')[0];
-        await cloudinary.uploader.destroy(`user_profile/` + publicId);
-      }
+  //     if (user.profileImage) {
+  //       const publicId = user.profileImage.split('/').pop().split('.')[0];
+  //       await cloudinary.uploader.destroy(`user_profile/` + publicId);
+  //     }
 
-      return await this.prisma.user.update({ where: { student_id: nim }, data: { profileImage: '' } });
-    } catch (error) {
-      console.error('Error deleting image from Cloudinary:', error);
-      throw new InternalServerErrorException('Failed to delete image. Please try again later.');
-    }
-  }
+  //     return await this.prisma.user.update({ where: { student_id: nim }, data: { profileImage: '' } });
+  //   } catch (error) {
+  //     console.error('Error deleting image from Cloudinary:', error);
+  //     throw new InternalServerErrorException('Failed to delete image. Please try again later.');
+  //   }
+  // }
 
   // Method to post first_name and last_name
-  async postName(nim: string, first_name: string, last_name: string): Promise<User> {
+  async postNameAndGender(nim: string, first_name: string, last_name: string, gender:string): Promise<User> {
     try {
-      return await this.prisma.user.update({where: {student_id: nim}, data: {firstName: first_name, lastName: last_name}});
+      return await this.prisma.user.update({where: {student_id: nim}, data: {firstName: first_name, lastName: last_name, gender: gender}});
     } catch (error) {
       console.error('Error posting first_name and last_name:', error);
       throw new InternalServerErrorException('Failed to post first_name and last_name. Please try again later.');
