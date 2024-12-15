@@ -166,12 +166,12 @@ export class AuthController {
     @Body() UploadProfileDto: UploadProfileDto,
     @Res() response: ExpressResponse,
   ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
+    // if (!file) {
+    //   throw new BadRequestException('No file uploaded');
+    // }
 
     try {
-      await this.authService.uploadImageProfile(file, UploadProfileDto);
+      await this.authService.uploadImageProfile(UploadProfileDto);
 
       // const token = this.authService.generateToken(user);
 
