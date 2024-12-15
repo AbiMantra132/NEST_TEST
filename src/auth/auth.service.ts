@@ -171,17 +171,11 @@ export class AuthService {
     uploadProfileDto: UploadProfileDto,
   ): Promise<User> {
     try {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'user_profile',
-      });
-
-      
 
       // Update the user profile with the image URL
       await this.prisma.user.update({
         where: { student_id: uploadProfileDto.nim },
         data: {
-          profileImage: result.secure_url,
           firstName: uploadProfileDto.firstName,
           lastName: uploadProfileDto.lastName,
           gender: uploadProfileDto.gender,
