@@ -22,12 +22,12 @@ import { User } from '@prisma/client';
 import { SignupDto, LoginDto, OtpDto, UploadProfileDto } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
-import MulterOptions from '../config/multer.config';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private cloudinaryService:CloudinaryService) {}
 
   @Get('/verify')
   async verify(
@@ -162,18 +162,15 @@ export class AuthController {
   @Post('/image-profile')
   @UseInterceptors(FileInterceptor('profile'))
   async uploadProfile(
-    @UploadedFile() file: Express.Multer.File,
-    @Res() response: ExpressResponse,
-  ) {
-
-    console.log(file);
-    
+    @UploadedFile() file: Express.Multer.File
+  ) {    
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
     try {
-      const user = await this.authService.uploadImageProfile(file);
+      console.log(file.path);
+      const user = await this.cloudinaryService.uploadProfileImage(file);
 
       // const token = this.authService.generateToken(user);
 
@@ -192,20 +189,6 @@ export class AuthController {
     } catch (error) {
       console.error('Image upload error:', error);
       throw new InternalServerErrorException('Unable to upload image');
-    }
-  }
-
-  @Post('/confirm-data')
-  async confirmData(@Body() otpDto: OtpDto) {
-    try {
-      await this.authService.confirmData(otpDto.nim);
-      return {
-        success: true,
-        message: 'otp successfully updated',
-      };
-    } catch (error) {
-      console.error('Request OTP error:', error);
-      throw new InternalServerErrorException('Unable to request OTP');
     }
   }
 

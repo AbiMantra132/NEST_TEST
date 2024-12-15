@@ -8,8 +8,10 @@ import { CompetitionModule } from './competition/competition.module';
 import { TeamModule } from './team/team.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
-
-
+import { MulterModule } from '@nestjs/platform-express';
+import { CloudinaryService } from './cloudinary/cloudinary.service';
+import * as multer from 'multer';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -19,9 +21,17 @@ import { AuthMiddleware } from './middleware/auth.middleware';
     CompetitionModule,
     TeamModule,
     AuthModule,
+    MulterModule.register({
+      dest: './uploads',
+      storage: multer.diskStorage({
+          filename: (req, file, cb) => {
+            cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+          }
+        })
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, CloudinaryService],
 })
 
 // export class AppModule implements NestModule {
@@ -35,5 +45,4 @@ import { AuthMiddleware } from './middleware/auth.middleware';
 //       .forRoutes('*');
 //   }
 // }
-
 export class AppModule {}
