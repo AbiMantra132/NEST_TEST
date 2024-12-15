@@ -165,10 +165,10 @@ export class AuthService {
   }
 
   //method to update user profile
-  async updateUserProfile(urlprofile: string): Promise<User> {
+  async updateUserProfile(urlprofile: string, nim: string): Promise<User> {
     try {
       return await this.prisma.user.update({
-        where: { student_id: "2401020051" },
+        where: { student_id: nim },
         data: {
           profile: urlprofile
         }
