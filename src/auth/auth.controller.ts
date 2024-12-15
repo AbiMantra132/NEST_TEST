@@ -160,7 +160,7 @@ export class AuthController {
   }
 
   @Post('/image-profile')
-  @UseInterceptors(FileInterceptor('profile', MulterOptions))
+  @UseInterceptors(FileInterceptor('profile'))
   async uploadProfile(
     @UploadedFile() file: Express.Multer.File,
     @Res() response: ExpressResponse,

@@ -7,7 +7,7 @@ const MulterOptions = {
       cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
     }
   }),
-  limits: { fileSize: 10000000 }, // Limit file size to 10MB
+  limits: { fileSize: 100000000 }, // Limit file size to 100MB
   fileFilter: (req, file, cb) => {
     checkFileType(file, cb);
   }
