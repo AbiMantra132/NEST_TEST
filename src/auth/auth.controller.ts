@@ -163,7 +163,7 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() UploadProfileDto: UploadProfileDto,
+    @Body() UploadProfileDto: any,
     // @Res() response: ExpressResponse,
   ) {
     if (!file) {
