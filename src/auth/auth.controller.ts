@@ -186,7 +186,7 @@ export class AuthController {
       return {
         success: true,
         message: 'Profile uploaded successfully',
-        Body
+        body: JSON.stringify(Body)
       };
     } catch (error) {
       console.error('Image upload error:', error);
