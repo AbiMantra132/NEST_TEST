@@ -160,18 +160,17 @@ export class AuthController {
   }
 
   @Post('/upload-profile')
-  // @UseInterceptors(FileInterceptor('profile', MulterOptions))
+  @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
-    // @UploadedFile() file: Express.Multer.File,
-    @Body() UploadProfileDto: UploadProfileDto,
-    // @Res() response: ExpressResponse,
+    @UploadedFile() file: Express.Multer.File,
+    @Res() response: ExpressResponse,
   ) {
-    // if (!file) {
-    //   throw new BadRequestException('No file uploaded');
-    // }
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
 
     try {
-      const user = await this.authService.uploadImageProfile(UploadProfileDto.nim, UploadProfileDto.firstName, UploadProfileDto.lastName, UploadProfileDto.gender);
+      const user = await this.authService.uploadImageProfile(file);
 
       // const token = this.authService.generateToken(user);
 

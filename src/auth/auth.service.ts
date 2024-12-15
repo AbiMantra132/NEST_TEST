@@ -167,36 +167,14 @@ export class AuthService {
 
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
-    // file: Express.Multer.File,
-    nim: string,
-    firstName: string,
-    lastName: string,
-    gender: string,
-  ): Promise<User> {
+    file: Express.Multer.File
+  ): Promise<string> {
     try {
-      // await cloudinary.uploader.upload(file.path, {
-      //   folder: 'user_profile',
-      // });
-
-      const user = await this.prisma.user.findUnique({
-        where: { student_id: nim },
-      });
-      if (!user) {
-        throw new UnauthorizedException('Student ID not found.');
-      }
-
-      // Update the user profile with the image URL
-      await this.prisma.user.update({
-        where: { student_id: nim },
-        data: {
-          // profileImage: result.secure_url,
-          firstName,
-          lastName,
-          gender
-        },
+      const cloudStorage = await cloudinary.uploader.upload(file.path, {
+        folder: 'user_profile',
       });
 
-      return user;
+      return cloudStorage.secure_url;
     } catch (error) {
       console.error('Error adding data to database:', error);
       throw new InternalServerErrorException(
