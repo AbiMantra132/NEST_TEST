@@ -163,15 +163,15 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() UploadProfileDto: UploadProfileDto,
-    @Res() response: ExpressResponse,
+    // @Body() UploadProfileDto: UploadProfileDto,
+    // @Res() response: ExpressResponse,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
     try {
-      await this.authService.uploadImageProfile(file, UploadProfileDto);
+      await this.authService.uploadImageProfile(file) //,UploadProfileDto);
 
       // const token = this.authService.generateToken(user);
 

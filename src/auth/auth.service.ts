@@ -168,10 +168,10 @@ export class AuthService {
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
     file: Express.Multer.File,
-    uploadProfileDto: UploadProfileDto,
+    // uploadProfileDto: UploadProfileDto,
   ): Promise<void> {
     try {
-      const result = await cloudinary.uploader.upload(file.path, {
+      await cloudinary.uploader.upload(file.path, {
         folder: 'user_profile',
       });
 
