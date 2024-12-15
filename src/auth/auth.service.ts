@@ -165,16 +165,13 @@ export class AuthService {
   }
 
   //method to update user profile
-  async updateUserProfile(urlprofile: string, nim: string, firstName: string, lastName: string, gender: string): Promise<User> {
+  async updateUserProfile(urlprofile: string): Promise<User> {
     try {
       return await this.prisma.user.update({
-        where: { student_id: nim },
+        where: { student_id: "2401020051" },
         data: {
-          profile: urlprofile,
-          firstName,
-          lastName,
-          gender
-        },
+          profile: urlprofile
+        }
       });
     } catch (err) {
       console.error('Error updating user profile:', err);
