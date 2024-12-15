@@ -167,7 +167,7 @@ export class AuthService {
 
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
-    // file: Express.Multer.File,
+    file: Express.Multer.File,
     uploadProfileDto: UploadProfileDto,
   ): Promise<void> {
     try {
@@ -183,8 +183,8 @@ export class AuthService {
         data: {
           // profileImage: result.secure_url,
           firstName: uploadProfileDto.firstName,
-          // lastName: uploadProfileDto.lastName,
-          // gender: uploadProfileDto.gender,
+          lastName: uploadProfileDto.lastName,
+          gender: uploadProfileDto.gender,
         },
       });
 
