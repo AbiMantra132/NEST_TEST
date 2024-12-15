@@ -176,15 +176,15 @@ export class AuthController {
 
     try {
       const url = await this.cloudinaryService.uploadProfileImage(file);
-      const user = await this.authService.updateUserProfile(
-        url.secure_url,
-        UploadProfileDto.nim,
-        UploadProfileDto.firstName,
-        UploadProfileDto.lastName,
-        UploadProfileDto.gender,
-      );
+      // const user = await this.authService.updateUserProfile(
+      //   url.secure_url,
+      //   UploadProfileDto.nim,
+      //   UploadProfileDto.firstName,
+      //   UploadProfileDto.lastName,
+      //   UploadProfileDto.gender,
+      // );
 
-      console.log(user);
+      // console.log(user);
 
       // const token = this.authService.generateToken(user);
 
@@ -198,7 +198,7 @@ export class AuthController {
       return {
         success: true,
         message: 'Profile image uploaded successfully',
-        user,
+        // user,
       };
     } catch (error) {
       console.error('Image upload error:', error);
