@@ -163,7 +163,7 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() UploadProfileDto: any,
+    @Body() UploadProfileDto: UploadProfileDto,
     @Res() response: ExpressResponse,
   ) {
     // if (!file) {
@@ -171,7 +171,7 @@ export class AuthController {
     // }
 
     try {
-      await this.authService.uploadImageProfile(UploadProfileDto);
+      const user = await this.authService.uploadImageProfile(UploadProfileDto.nim, UploadProfileDto.firstName, UploadProfileDto.lastName, UploadProfileDto.gender);
 
       // const token = this.authService.generateToken(user);
 
@@ -185,6 +185,7 @@ export class AuthController {
       return {
         success: true,
         message: 'Profile image uploaded successfully',
+        user
       };
     } catch (error) {
       console.error('Image upload error:', error);

@@ -168,28 +168,35 @@ export class AuthService {
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
     // file: Express.Multer.File,
-    uploadProfileDto: UploadProfileDto,
-  ): Promise<void> {
+    nim: string,
+    firstName: string,
+    lastName: string,
+    gender: string,
+  ): Promise<User> {
     try {
       // await cloudinary.uploader.upload(file.path, {
       //   folder: 'user_profile',
       // });
-  
+
+      const user = await this.prisma.user.findUnique({
+        where: { student_id: nim },
+      });
+      if (!user) {
+        throw new UnauthorizedException('Student ID not found.');
+      }
 
       // Update the user profile with the image URL
       await this.prisma.user.update({
-        where: { student_id: uploadProfileDto.nim },
+        where: { student_id: nim },
         data: {
           // profileImage: result.secure_url,
-          firstName: uploadProfileDto.firstName,
-          // lastName: uploadProfileDto.lastName,
-          // gender: uploadProfileDto.gender,
+          firstName,
+          lastName,
+          gender
         },
       });
 
-      // const user = await this.prisma.user.findUnique({ where: { student_id: uploadProfileDto.nim } });
-
-      // return user;
+      return user;
     } catch (error) {
       console.error('Error adding data to database:', error);
       throw new InternalServerErrorException(
@@ -197,7 +204,6 @@ export class AuthService {
       );
     }
   }
-
 
   async confirmData(nim: string): Promise<User> {
     try {
@@ -215,11 +221,12 @@ export class AuthService {
 
       return user;
     } catch (err) {
-      throw new InternalServerErrorException('Failed to request OTP. Please try again later.');
+      throw new InternalServerErrorException(
+        'Failed to request OTP. Please try again later.',
+      );
     }
   }
 
-  
   // Method to delete image profile from Cloudinary
   // async deleteImageProfile(nim: string): Promise<User> {
   //   try {
