@@ -24,10 +24,14 @@ import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import MulterOptions from 'src/config/multer.config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService, private cloudinaryService:CloudinaryService) {}
+  constructor(
+    private authService: AuthService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get('/verify')
   async verify(
@@ -160,17 +164,27 @@ export class AuthController {
   }
 
   @Post('/image-profile')
-  @UseInterceptors(FileInterceptor('profile'))
+  @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
-    @UploadedFile() file: Express.Multer.File
-  ) {    
+    @Body() UploadProfileDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Res({ passthrough: true }) response: ExpressResponse,
+  ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
     try {
-      console.log(file.path);
-      const user = await this.cloudinaryService.uploadProfileImage(file);
+      const url = await this.cloudinaryService.uploadProfileImage(file);
+      const user = await this.authService.updateUserProfile(
+        url.secure_url,
+        UploadProfileDto.nim,
+        UploadProfileDto.firstName,
+        UploadProfileDto.lastName,
+        UploadProfileDto.gender,
+      );
+
+      console.log(user);
 
       // const token = this.authService.generateToken(user);
 
@@ -184,7 +198,7 @@ export class AuthController {
       return {
         success: true,
         message: 'Profile image uploaded successfully',
-        user
+        user,
       };
     } catch (error) {
       console.error('Image upload error:', error);

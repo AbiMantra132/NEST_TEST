@@ -12,7 +12,6 @@ import * as nodemailer from 'nodemailer';
 import { User } from '@prisma/client';
 import { MajorType } from '@prisma/client';
 import { SignupDto, LoginDto, UploadProfileDto } from './dto/index';
-import { cloudinary } from '../config/cloudinary.config';
 
 @Injectable()
 export class AuthService {
@@ -163,6 +162,24 @@ export class AuthService {
         updatedAt: new Date(),
       },
     });
+  }
+
+  //method to update user profile
+  async updateUserProfile(urlprofile: string, nim: string, firstName: string, lastName: string, gender: string): Promise<User> {
+    try {
+      return await this.prisma.user.update({
+        where: { student_id: nim },
+        data: {
+          profile: urlprofile,
+          firstName,
+          lastName,
+          gender
+        },
+      });
+    } catch (err) {
+      console.error('Error updating user profile:', err);
+      throw new InternalServerErrorException('Failed to update user profile. Please try again later.');
+    }
   }
 
   // Method to delete image profile from Cloudinary
