@@ -198,6 +198,27 @@ export class AuthService {
     }
   }
 
+
+  async confirmData(nim: string): Promise<User> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { student_id: nim },
+      });
+      if (!user) {
+        throw new UnauthorizedException('Student ID not found.');
+      }
+
+      await this.prisma.user.update({
+        where: { student_id: nim },
+        data: { otp: '' },
+      });
+
+      return user;
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to request OTP. Please try again later.');
+    }
+  }
+
   
   // Method to delete image profile from Cloudinary
   // async deleteImageProfile(nim: string): Promise<User> {

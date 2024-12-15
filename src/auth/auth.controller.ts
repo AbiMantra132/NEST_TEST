@@ -160,9 +160,9 @@ export class AuthController {
   }
 
   @Post('/upload-profile')
-  // @UseInterceptors(FileInterceptor('profile', MulterOptions))
+  @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
-    // @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Body() UploadProfileDto: any,
     @Res() response: ExpressResponse,
   ) {
@@ -189,6 +189,20 @@ export class AuthController {
     } catch (error) {
       console.error('Image upload error:', error);
       throw new InternalServerErrorException('Unable to upload image');
+    }
+  }
+
+  @Post('/confirm-data')
+  async confirmData(@Body() otpDto: OtpDto) {
+    try {
+      await this.authService.confirmData(otpDto.nim);
+      return {
+        success: true,
+        message: 'otp successfully updated',
+      };
+    } catch (error) {
+      console.error('Request OTP error:', error);
+      throw new InternalServerErrorException('Unable to request OTP');
     }
   }
 
