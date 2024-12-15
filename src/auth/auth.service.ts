@@ -168,7 +168,7 @@ export class AuthService {
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
     file: Express.Multer.File,
-    // uploadProfileDto: UploadProfileDto,
+    uploadProfileDto: UploadProfileDto,
   ): Promise<void> {
     try {
       await cloudinary.uploader.upload(file.path, {
@@ -181,7 +181,7 @@ export class AuthService {
       // await this.prisma.user.update({
       //   where: { student_id: uploadProfileDto.nim },
       //   data: {
-      //     profileImage: result.secure_url,
+      //     // profileImage: result.secure_url,
       //     firstName: uploadProfileDto.firstName,
       //     lastName: uploadProfileDto.lastName,
       //     gender: uploadProfileDto.gender,

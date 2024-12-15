@@ -163,7 +163,7 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('profile', MulterOptions))
   async uploadProfile(
     @UploadedFile() file: Express.Multer.File,
-    // @Body() UploadProfileDto: UploadProfileDto,
+    @Body() UploadProfileDto: UploadProfileDto,
     // @Res() response: ExpressResponse,
   ) {
     if (!file) {
@@ -171,7 +171,7 @@ export class AuthController {
     }
 
     try {
-      await this.authService.uploadImageProfile(file) //,UploadProfileDto);
+      await this.authService.uploadImageProfile(file ,UploadProfileDto);
 
       // const token = this.authService.generateToken(user);
 
