@@ -24,7 +24,7 @@ import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import MulterOptions from 'src/config/multer.config';
+import MulterOptions from '../config/multer.config';
 
 @Controller('auth')
 export class AuthController {
