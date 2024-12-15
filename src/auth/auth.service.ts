@@ -174,8 +174,7 @@ export class AuthService {
       // await cloudinary.uploader.upload(file.path, {
       //   folder: 'user_profile',
       // });
-
-      
+  
 
       // Update the user profile with the image URL
       await this.prisma.user.update({
