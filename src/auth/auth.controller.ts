@@ -178,7 +178,8 @@ export class AuthController {
       const url = await this.cloudinaryService.uploadProfileImage(file);
       const user = await this.authService.updateUserProfile(
         url.secure_url,
-        UploadProfileDto.nim
+        UploadProfileDto.nim,
+        UploadProfileDto.firstName,
       );
 
       // console.log(user);
