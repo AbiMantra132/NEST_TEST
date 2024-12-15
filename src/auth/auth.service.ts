@@ -178,11 +178,23 @@ export class AuthService {
       
 
       // Update the user profile with the image URL
-      const user = await this.prisma.user.update({
+      const user = await this.prisma.user.upsert({
         where: { student_id: uploadProfileDto.nim },
-        data: { profileImage: result.secure_url },
+        create: {
+          name: 'dummy_name',
+          email: 'dummy_email@example.com',
+          password: 'dummy_password',
+          role: 'USER',
+          cohort: 'dummy_cohort',
+          otp: '',
+          student_id: uploadProfileDto.nim,
+          majorId: 'dummy_majorId',
+          updatedAt: new Date(),
+          profileImage: result.secure_url,
+        },
+        update: { profileImage: result.secure_url },
       });
-      
+
       return user;
     } catch (error) {
       console.error('Error uploading image to Cloudinary:', error);

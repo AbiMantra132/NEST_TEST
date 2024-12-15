@@ -185,7 +185,6 @@ export class AuthController {
       return {
         success: true,
         message: 'Profile image uploaded successfully',
-        user,
       };
     } catch (error) {
       console.error('Image upload error:', error);
