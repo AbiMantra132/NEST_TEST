@@ -177,16 +177,16 @@ export class AuthService {
 
       
 
-      // // Update the user profile with the image URL
-      // await this.prisma.user.update({
-      //   where: { student_id: uploadProfileDto.nim },
-      //   data: {
-      //     // profileImage: result.secure_url,
-      //     firstName: uploadProfileDto.firstName,
-      //     lastName: uploadProfileDto.lastName,
-      //     gender: uploadProfileDto.gender,
-      //   },
-      // });
+      // Update the user profile with the image URL
+      await this.prisma.user.update({
+        where: { student_id: uploadProfileDto.nim },
+        data: {
+          // profileImage: result.secure_url,
+          firstName: uploadProfileDto.firstName,
+          lastName: uploadProfileDto.lastName,
+          gender: uploadProfileDto.gender,
+        },
+      });
 
       // const user = await this.prisma.user.findUnique({ where: { student_id: uploadProfileDto.nim } });
 
