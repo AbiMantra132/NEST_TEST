@@ -172,7 +172,7 @@ export class AuthController {
     // }
 
     try {
-      await this.authService.uploadImageProfile(UploadProfileDto);
+      // await this.authService.uploadImageProfile(UploadProfileDto);
 
       // const token = this.authService.generateToken(user);
 
