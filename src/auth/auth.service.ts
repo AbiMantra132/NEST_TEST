@@ -175,25 +175,18 @@ export class AuthService {
         folder: 'user_profile',
       });
 
-      
-
       // Update the user profile with the image URL
-      const user = await this.prisma.user.upsert({
+      await this.prisma.user.update({
         where: { student_id: uploadProfileDto.nim },
-        create: {
-          name: 'dummy_name',
-          email: 'dummy_email@example.com',
-          password: 'dummy_password',
-          role: 'USER',
-          cohort: 'dummy_cohort',
-          otp: '',
-          student_id: uploadProfileDto.nim,
-          majorId: 'dummy_majorId',
-          updatedAt: new Date(),
+        data: {
           profileImage: result.secure_url,
+          firstName: uploadProfileDto.firstName,
+          lastName: uploadProfileDto.lastName,
+          gender: uploadProfileDto.gender,
         },
-        update: { profileImage: result.secure_url },
       });
+
+      const user = await this.prisma.user.findUnique({ where: { student_id: uploadProfileDto.nim } });
 
       return user;
     } catch (error) {
