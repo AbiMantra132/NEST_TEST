@@ -184,16 +184,14 @@ export class AuthController {
         UploadProfileDto.gender
       );
 
-      // console.log(user);
+      const token = this.authService.generateToken(user);
 
-      // const token = this.authService.generateToken(user);
-
-      // response.cookie('auth-token', token, {
-      //   httpOnly: true,
-      //   secure: true,
-      //   sameSite: 'none',
-      //   maxAge: 30 * 24 * 60 * 60 * 1000,
-      // });
+      response.cookie('auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
 
       return {
         success: true,
