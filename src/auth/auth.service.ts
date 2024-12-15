@@ -178,28 +178,11 @@ export class AuthService {
       
 
       // Update the user profile with the image URL
-      await this.prisma.user.update({
+      const user = await this.prisma.user.update({
         where: { student_id: uploadProfileDto.nim },
         data: { profileImage: result.secure_url },
       });
-
-      await this.prisma.user.update({
-        where: { student_id: uploadProfileDto.nim },
-        data: { firstName: uploadProfileDto.firstName },
-      });
-
-      await this.prisma.user.update({
-        where: { student_id: uploadProfileDto.nim },
-        data: { lastName: uploadProfileDto.lastName },
-      });
-
-      await this.prisma.user.update({
-        where: { student_id: uploadProfileDto.nim },
-        data: { gender: uploadProfileDto.gender },
-      });
-
-      const user = await this.prisma.user.findUnique({ where: { student_id: uploadProfileDto.nim } });
-
+      
       return user;
     } catch (error) {
       console.error('Error uploading image to Cloudinary:', error);
