@@ -182,8 +182,8 @@ export class AuthService {
         data: {
           // profileImage: result.secure_url,
           firstName: uploadProfileDto.firstName,
-          lastName: uploadProfileDto.lastName,
-          gender: uploadProfileDto.gender,
+          // lastName: uploadProfileDto.lastName,
+          // gender: uploadProfileDto.gender,
         },
       });
 
