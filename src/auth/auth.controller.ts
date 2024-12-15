@@ -180,6 +180,8 @@ export class AuthController {
         url.secure_url,
         UploadProfileDto.nim,
         UploadProfileDto.firstName,
+        UploadProfileDto.lastName,
+        UploadProfileDto.gender
       );
 
       // console.log(user);
