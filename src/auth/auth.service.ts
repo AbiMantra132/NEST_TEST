@@ -167,13 +167,13 @@ export class AuthService {
 
   // Method to upload image profile to Cloudinary
   async uploadImageProfile(
-    file: Express.Multer.File,
+    // file: Express.Multer.File,
     uploadProfileDto: UploadProfileDto,
   ): Promise<void> {
     try {
-      await cloudinary.uploader.upload(file.path, {
-        folder: 'user_profile',
-      });
+      // await cloudinary.uploader.upload(file.path, {
+      //   folder: 'user_profile',
+      // });
 
       
 
@@ -192,7 +192,7 @@ export class AuthService {
 
       // return user;
     } catch (error) {
-      console.error('Error uploading image to Cloudinary:', error);
+      console.error('Error adding data to database:', error);
       throw new InternalServerErrorException(
         'Failed to upload image. Please try again later.',
       );

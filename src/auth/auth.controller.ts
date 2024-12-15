@@ -171,7 +171,7 @@ export class AuthController {
     }
 
     try {
-      await this.authService.uploadImageProfile(file ,UploadProfileDto);
+      await this.authService.uploadImageProfile(UploadProfileDto);
 
       // const token = this.authService.generateToken(user);
 
@@ -184,7 +184,7 @@ export class AuthController {
 
       return {
         success: true,
-        message: 'Profile image uploaded successfully',
+        message: 'Profile uploaded successfully',
       };
     } catch (error) {
       console.error('Image upload error:', error);
