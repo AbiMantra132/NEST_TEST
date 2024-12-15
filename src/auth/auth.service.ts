@@ -176,7 +176,7 @@ export class AuthService {
       });
 
       // Update the user profile with the image URL
-      const user = await this.prisma.user.update({
+      await this.prisma.user.update({
         where: { student_id: uploadProfileDto.nim },
         data: {
           profileImage: result.secure_url,
@@ -185,6 +185,8 @@ export class AuthService {
           gender: uploadProfileDto.gender,
         },
       });
+
+      const user = await this.prisma.user.findUnique({ where: { student_id: uploadProfileDto.nim } });
 
       return user;
     } catch (error) {
