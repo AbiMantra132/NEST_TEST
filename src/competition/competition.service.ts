@@ -42,7 +42,11 @@ export class CompetitionService {
     });
   }
 
-  async update(id: string, updateDto: UpdateCompetitionDto): Promise<Competition | null> {
+  async update(url: string, id: string, updateDto: UpdateCompetitionDto): Promise<Competition | null> {
+    if(url) {
+      updateDto.imagePoster = url;
+    }
+
     return await this.prisma.competition.update({
       where: { id },
       data: updateDto,

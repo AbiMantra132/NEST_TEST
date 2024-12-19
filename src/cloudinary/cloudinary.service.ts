@@ -36,4 +36,15 @@ export class CloudinaryService {
       return error;
     }
   }
+
+  async deleteCompetitionPoster(secureUrl: string): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const publicId = secureUrl.split('/').pop().split('.')[0];
+      const result = await cloudinary.uploader.destroy(`competition_poster/` + publicId);
+
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
 }
