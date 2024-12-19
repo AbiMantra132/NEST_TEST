@@ -41,18 +41,19 @@ model Major {
 
 // For User Competition University
 model Competition {
-  id           String       @id @default(auto())     @map("_id") @db.ObjectId 
-  title        String    
-  description  String?
-  category     String    
-  level        Level
-  type         Type
-  imagePoster  String?      @map("image_poster")
-  startDate    DateTime     @map("start_date")
-  endDate      DateTime     @map("end_date")
-  createdAt    DateTime     @default(now())         @map("created_at")
-  updatedAt    DateTime     @updatedAt              @map("updated_at")
-  userId       String       @map("user_id")         @db.ObjectId
+  id              String       @id @default(auto())     @map("_id") @db.ObjectId 
+  title           String    
+  description     String?
+  category        String    
+  level           Level
+  type            Type
+  imagePoster     String?      @map("image_poster")
+  startDate       DateTime     @map("start_date")
+  endDate         DateTime     @map("end_date")
+  linkGuidebook   String       @map("link_guidebook")
+  linkPendaftaran String       @map("link_pendaftaran")
+  createdAt       DateTime     @default(now())         @map("created_at")
+  updatedAt       DateTime     @updatedAt              @map("updated_at")
 }
 
 model Team {

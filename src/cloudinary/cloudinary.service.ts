@@ -24,4 +24,16 @@ export class CloudinaryService {
       return error;
     }
   }
+
+  async uploadPoster(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'competition_poster',
+      });
+      
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
 }

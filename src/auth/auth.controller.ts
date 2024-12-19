@@ -19,7 +19,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { SignupDto, LoginDto, OtpDto, UploadProfileDto } from './dto/index';
+import { SignupDto, LoginDto, OtpDto } from './dto/index';
 import { AuthService } from './auth.service';
 import * as jwt from 'jsonwebtoken';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';

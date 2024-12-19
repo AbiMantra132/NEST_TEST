@@ -11,7 +11,44 @@ import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import { User } from '@prisma/client';
 import { MajorType } from '@prisma/client';
-import { SignupDto, LoginDto, UploadProfileDto } from './dto/index';
+import { SignupDto, LoginDto } from './dto/index';
+
+/**
+ * Authentication service responsible for handling user authentication operations.
+ * @class AuthService
+ * 
+ * @description
+ * This service provides methods for user authentication, including:
+ * - User signup with email verification
+ * - User login
+ * - OTP (One-Time Password) management
+ * - Token generation
+ * - Profile management
+ * 
+ * @methods
+ * - signup: Registers a new user with OTP verification
+ * - login: Authenticates a user with NIM and password
+ * - requestOTP: Generates and sends new OTP to user's email
+ * - resetOTP: Resets user's OTP
+ * - verifyOtp: Validates user's OTP input
+ * - generateToken: Creates JWT token for authenticated user
+ * - updateUserProfile: Updates user profile information
+ * 
+ * @private methods
+ * - checkUserExists: Validates if NIM is already registered
+ * - findMajor: Retrieves major information from database
+ * - validateNim: Ensures NIM meets required format
+ * - createUser: Creates new user record in database
+ * - generateOtp: Creates random 4-digit OTP
+ * - updateUserOtp: Updates user's OTP in database
+ * - sendEmail: Sends email using nodemailer
+ * 
+ * @requires
+ * - PrismaService - Database service
+ * - JwtService - JWT token service
+ * - bcrypt - Password hashing
+ * - nodemailer - Email service
+ */
 
 @Injectable()
 export class AuthService {
@@ -20,7 +57,6 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // Method to handle user signup
   async signup(signupDto: SignupDto): Promise<User> {
     const { name, email, password, nim, major, cohort } = signupDto;
 
@@ -46,7 +82,6 @@ export class AuthService {
     return user;
   }
 
-  // Method to handle user login
   async login(loginDto: LoginDto): Promise<User> {
     const { nim, password } = loginDto;
 
@@ -65,7 +100,6 @@ export class AuthService {
     return user;
   }
 
-  // Method to request OTP
   async requestOTP(studentId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { student_id: studentId },
@@ -79,7 +113,6 @@ export class AuthService {
     await this.sendEmail(user.email, 'Your OTP Code', `Your OTP is: ${otp}`);
   }
 
-  // Method to reset OTP
   async resetOTP(studentId: string): Promise<User> {
     try {
       return await this.prisma.user.update({
@@ -92,7 +125,6 @@ export class AuthService {
     }
   }
 
-  // Method to verify OTP
   async verifyOtp(
     studentId: string,
     otp: string,
@@ -113,13 +145,11 @@ export class AuthService {
     return { user, status: true };
   }
 
-  // Method to generate JWT token
   generateToken(user: User): string {
     const payload = { user };
     return this.jwtService.sign(payload);
   }
 
-  // Method to check if user already exists
   private async checkUserExists(nim: string): Promise<void> {
     const existingUser = await this.prisma.user.findUnique({
       where: { student_id: nim },
@@ -130,14 +160,12 @@ export class AuthService {
     }
   }
 
-  // Method to find major by name
   private async findMajor(major: string): Promise<any> {
     return await this.prisma.major.findFirst({
       where: { major: major as MajorType },
     });
   }
 
-  // Method to validate NIM
   private validateNim(nim: string): void {
     if (nim.length !== 10) {
       throw new BadRequestException('Nim Inputed Is Not Valid', {
@@ -147,7 +175,6 @@ export class AuthService {
     }
   }
 
-  // Method to create a new user
   private async createUser(data: any): Promise<User> {
     return await this.prisma.user.create({
       data: {
@@ -164,8 +191,13 @@ export class AuthService {
     });
   }
 
-  //method to update user profile
-  async updateUserProfile(urlprofile: string, nim: string, firstName: string, lastName:string, gender:string): Promise<User> {
+  async updateUserProfile(
+    urlprofile: string,
+    nim: string,
+    firstName: string,
+    lastName: string,
+    gender: string,
+  ): Promise<User> {
     try {
       return await this.prisma.user.update({
         where: { student_id: nim },
@@ -173,12 +205,14 @@ export class AuthService {
           profile: urlprofile,
           firstName,
           lastName,
-          gender
-        }
+          gender,
+        },
       });
     } catch (err) {
       console.error('Error updating user profile:', err);
-      throw new InternalServerErrorException('Failed to update user profile. Please try again later.');
+      throw new InternalServerErrorException(
+        'Failed to update user profile. Please try again later.',
+      );
     }
   }
 
@@ -202,12 +236,10 @@ export class AuthService {
   //   }
   // }
 
-  // Method to generate OTP
   private generateOtp(): string {
     return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
-  // Method to update user OTP
   private async updateUserOtp(studentId: string, otp: string): Promise<void> {
     await this.prisma.user.update({
       where: { student_id: studentId },
@@ -215,7 +247,6 @@ export class AuthService {
     });
   }
 
-  // Method to send email
   private async sendEmail(
     to: string,
     subject: string,

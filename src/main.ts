@@ -12,6 +12,7 @@ async function bootstrap() {
       'https://tugas-akhir-web-lomba.vercel.app',
     ],
     credentials: true,
+    
   });
 
   await app.listen(3000);
