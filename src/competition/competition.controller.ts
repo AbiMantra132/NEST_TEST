@@ -29,7 +29,7 @@ export class CompetitionController {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  @Post('/createCompetition')
+  @Post('/create')
   @UseInterceptors(FileInterceptor('poster', MulterOptions))
   async createCompetition(
     @Body() competitionDto: CreateCompetitionDto,
