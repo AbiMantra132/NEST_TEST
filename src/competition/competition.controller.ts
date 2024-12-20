@@ -13,16 +13,17 @@ import {
 import { CompetitionService } from './competition.service';
 import {
   CreateCompetitionDto,
-  FilterCompetitionDto,
   UpdateCompetitionDto,
-  deleteCompetitionDto,
+  CreateTeamDto,
+  JoinCompetitionDto,
+  ReimburseDto
 } from './dto/index';
 import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import MulterOptions from 'src/config/multer.config';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
-@Controller('competition')
+@Controller('competitions')
 export class CompetitionController {
   constructor(
     private readonly competitionService: CompetitionService,
@@ -129,6 +130,91 @@ export class CompetitionController {
       throw new HttpException(
         `Error removing competition with id ${id}: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('/:id/join')
+  async joinCompetition(
+    @Param('id') id: string,
+    @Body() joinDto: JoinCompetitionDto,
+  ) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException(
+          'Competition not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return await this.competitionService.joinCompetition(id, joinDto);
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('/:id/team')
+  async createTeam(
+    @Param('id') id: string,
+    @Body() teamDto: CreateTeamDto,
+  ) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException(
+          'Competition not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return await this.competitionService.createTeam(id, teamDto);
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('/:id/reimburse')
+  async submitReimbursement(
+    @Param('id') id: string,
+    @Body() reimburseDto: ReimburseDto,
+  ) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException(
+          'Competition not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return await this.competitionService.submitReimbursement(id, reimburseDto);
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('/:id/teams')
+  async getTeams(@Param('id') id: string) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException(
+          'Competition not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return await this.competitionService.getTeams(id);
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

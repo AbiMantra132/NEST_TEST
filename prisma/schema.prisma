@@ -56,22 +56,26 @@ model Competition {
   updatedAt       DateTime     @updatedAt              @map("updated_at")
 }
 
-model Team {
-  id            String      @id @default(auto())    @map("_id") @db.ObjectId 
-  name          String      @unique
-  competitionId String      @map("competition_id")  @db.ObjectId
-  leaderId      String      @map("leader_id")       @db.ObjectId
-  createdAt     DateTime    @default(now())         @map("created_at")
-  updatedAt     DateTime    @map("updated_at")
+model CompetitionParticipant {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @map("user_id") @db.ObjectId
+  competitionId   String     @map("competition_id") @db.ObjectId
+  teamId          String?   @map("team_id") @db.ObjectId
+  reimburseStatus Reimburse?
+  isLeader        Boolean     @default(false)
 }
 
-model Team_Members {
-  id            String      @id @default(auto())  @map("_id") @db.ObjectId
-  team_id       String      @map("team_id")       @db.ObjectId
-  user_id       String      @map("user_id")       @db.ObjectId
-  createdAt     DateTime    @default(now())       @map("created_at")
-  updatedAt     DateTime    @map("updated_at")
+model Team {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  leaderId        String
+  competitionId   String
+  members         String[]   @map("members") @db.ObjectId
+  maxMembers      Int
+  openSlots       Int
+  createdAt       DateTime    @default(now())
 }
+
 
 model Achievements {
   id              String    @id @default(auto())   @map("_id") @db.ObjectId
@@ -85,15 +89,20 @@ model Achievements {
 
 model Reimbursement {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String    @map("user_id") @db.ObjectId
   competitionId   String    @map("competition_id") @db.ObjectId
-  teamId          String    @map("team_id") @db.ObjectId
+  userId          String    @map("user_id") @db.ObjectId
   amount          Int
-  currency        String    @default("IDR")
   reason          String    
   status          Status
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @map("updated_at")
+}
+
+model History {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  competitionId   String
+  status          String      // ongoing, completed
+  isWinner        Boolean?
 }
 
 enum Level {
@@ -132,6 +141,12 @@ enum Rank {
 }
 
 enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Reimburse {
   PENDING
   APPROVED
   REJECTED
