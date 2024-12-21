@@ -166,6 +166,22 @@ export class CompetitionController {
       );
     }
   }
+  
+  @Get('/:id/team')
+  async getTeams(@Param('id') id: string) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.competitionService.getTeams(id);
+    } catch (error) {
+      throw new HttpException(
+        `Error retrieving teams for competition with id ${id}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   @Post('/:id/reimburse')
   async submitReimbursement(
