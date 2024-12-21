@@ -2,13 +2,13 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Delete,
   Body,
   Param,
   HttpException,
   HttpStatus,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { CompetitionService } from './competition.service';
 import {
@@ -91,11 +91,11 @@ export class CompetitionController {
   ) {
     try {
       let url = '';
-      if(File) {
+      if (File) {
         const dataImage = await this.cloudinaryService.uploadPoster(file);
         url = dataImage.secure_url;
       }
-      
+
       const previousPost = await this.competitionService.findOne(id);
       if (!previousPost) {
         throw new HttpException(
@@ -106,11 +106,7 @@ export class CompetitionController {
 
       if (url) await this.cloudinaryService.deleteCompetitionPoster(url);
 
-      return await this.competitionService.update(
-        url,
-        id,
-        updateDto,
-      );
+      return await this.competitionService.update(url, id, updateDto);
     } catch (error) {
       throw new HttpException(
         `Error updating competition with id ${id}: ${error.message}`,
@@ -123,8 +119,10 @@ export class CompetitionController {
   async remove(@Param('id') id: string) {
     try {
       const competition = await this.competitionService.remove(id);
-      await this.cloudinaryService.deleteCompetitionPoster(competition.imagePoster);
-      
+      await this.cloudinaryService.deleteCompetitionPoster(
+        competition.imagePoster,
+      );
+
       return competition;
     } catch (error) {
       throw new HttpException(
@@ -142,10 +140,7 @@ export class CompetitionController {
     try {
       const competition = await this.competitionService.findOne(id);
       if (!competition) {
-        throw new HttpException(
-          'Competition not found',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
       return await this.competitionService.joinCompetition(id, joinDto);
     } catch (error) {
@@ -157,17 +152,11 @@ export class CompetitionController {
   }
 
   @Post('/:id/team')
-  async createTeam(
-    @Param('id') id: string,
-    @Body() teamDto: CreateTeamDto,
-  ) {
+  async createTeam(@Param('id') id: string, @Body() teamDto: CreateTeamDto) {
     try {
       const competition = await this.competitionService.findOne(id);
       if (!competition) {
-        throw new HttpException(
-          'Competition not found',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
       return await this.competitionService.createTeam(id, teamDto);
     } catch (error) {
@@ -186,12 +175,12 @@ export class CompetitionController {
     try {
       const competition = await this.competitionService.findOne(id);
       if (!competition) {
-        throw new HttpException(
-          'Competition not found',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
-      return await this.competitionService.submitReimbursement(id, reimburseDto);
+      return await this.competitionService.submitReimbursement(
+        id,
+        reimburseDto,
+      );
     } catch (error) {
       throw new HttpException(
         error.message,
@@ -200,17 +189,19 @@ export class CompetitionController {
     }
   }
 
-  @Get('/:id/teams')
-  async getTeams(@Param('id') id: string) {
+  @Get(':id/user-status')
+  async getUserStatus(@Param('id') competitionId: string, @Query('userId') userId: string) {
     try {
-      const competition = await this.competitionService.findOne(id);
+      const competition = await this.competitionService.findOne(competitionId);
       if (!competition) {
-        throw new HttpException(
-          'Competition not found',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
-      return await this.competitionService.getTeams(id);
+
+      const status = await this.competitionService.getUserStatus(
+        competitionId,
+        userId,
+      );
+      return status;
     } catch (error) {
       throw new HttpException(
         error.message,

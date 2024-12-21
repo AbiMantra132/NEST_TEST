@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { Competition } from '@prisma/client';
+import { Competition, Team, Reimbursement, CompetitionParticipant } from '@prisma/client';
 import { CreateCompetitionDto } from './dto/create-competition.dto';
 import { UpdateCompetitionDto } from './dto/update-competition.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -109,7 +109,7 @@ export class CompetitionService {
   }
 
 
-  async joinCompetition(id: string, joinDto: { userId: string; teamId?: string }) {
+  async joinCompetition(id: string, joinDto: { userId: string; teamId?: string }): Promise<CompetitionParticipant> {
     const competition = await this.prisma.competition.findUnique({
       where: { id },
     });
@@ -138,7 +138,7 @@ export class CompetitionService {
     });
   }
 
-  async createTeam(id: string, teamDto: { name: string; leader: string; members?: string[]; maxMembers?: number }) {
+  async createTeam(id: string, teamDto: { name: string; leaderId: string; members?: string[]; maxMembers?: number }): Promise<Team> {
     const existingTeam = await this.prisma.team.findFirst({
       where: {
         name: teamDto.name,
@@ -150,8 +150,8 @@ export class CompetitionService {
       throw new BadRequestException('Team name already exists');
     }
 
-    const maxMembers = teamDto.maxMembers || 4;
-    const members = teamDto.members || [teamDto.leader];
+    const maxMembers = teamDto.maxMembers;
+    const members = teamDto.members || [teamDto.leaderId];
 
     if (members.length > maxMembers) {
       throw new BadRequestException('Team size exceeds maximum allowed members');
@@ -160,7 +160,7 @@ export class CompetitionService {
     return await this.prisma.team.create({
       data: {
         name: teamDto.name,
-        leaderId: teamDto.leader,
+        leaderId: teamDto.leaderId,
         competitionId: id,
         members,
         maxMembers,
@@ -169,7 +169,7 @@ export class CompetitionService {
     });
   }
 
-  async submitReimbursement(id: string, reimburseDto: { userId: string; amount: number; description: string }) {
+  async submitReimbursement(id: string, reimburseDto: { userId: string; amount: number; description: string }): Promise<Reimbursement> {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: {
         userId: reimburseDto.userId,
@@ -193,11 +193,50 @@ export class CompetitionService {
     });
   }
 
-  async getTeams(id: string) {
+  async getTeams(id: string): Promise<Team[]> {
     return await this.prisma.team.findMany({
       where: {
         competitionId: id,
       },
     });
+  }
+
+  async getUserStatus(competitionId: string, userId: string): Promise<{
+    isJoined: boolean;
+    hasTeam: boolean;
+    isLeader: boolean;
+    teamDetails: any;
+    hasReimburse: boolean;
+  }> {
+    const participant = await this.prisma.competitionParticipant.findFirst({
+      where: { userId, competitionId },
+      select: { teamId: true },
+    });
+
+    const team = participant?.teamId
+      ? await this.prisma.team.findUnique({
+          where: { id: participant.teamId },
+          select: {
+            id: true,
+            name: true,
+            openSlots: true,
+            maxMembers: true,
+            leaderId: true,
+          },
+        })
+      : null;
+
+    const isLeader = team?.leaderId === userId;
+    const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
+      where: { userId, competitionId },
+    }));
+
+    return {
+      isJoined: !!participant,
+      hasTeam: !!team,
+      isLeader: !!isLeader,
+      teamDetails: team,
+      hasReimburse,
+    };
   }
 }

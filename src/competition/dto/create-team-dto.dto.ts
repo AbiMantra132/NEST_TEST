@@ -1,6 +1,6 @@
 export class CreateTeamDto {
   name: string;
-  leader: string;
+  leaderId: string;
   members?: string[];
   maxMembers?: number;
 }
