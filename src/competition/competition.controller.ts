@@ -166,7 +166,6 @@ export class CompetitionController {
       );
     }
   }
-  
   @Get('/:id/team')
   async getTeams(@Param('id') id: string) {
     try {
