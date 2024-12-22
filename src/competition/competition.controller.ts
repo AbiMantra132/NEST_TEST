@@ -142,7 +142,8 @@ export class CompetitionController {
       if (!competition) {
         throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
-      return await this.competitionService.joinCompetition(id, joinDto);
+      await this.competitionService.joinCompetition(id, joinDto);
+      return { msg: 'successfully joined competition' };
     } catch (error) {
       throw new HttpException(
         error.message,
