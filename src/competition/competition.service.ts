@@ -138,7 +138,7 @@ export class CompetitionService {
     });
   }
 
-  async createTeam(id: string, teamDto: { name: string; leaderId: string; members?: string[]; maxMembers?: number }): Promise<any> {
+  async createTeam(id: string, teamDto: { name: string; leaderId: string; members?: string[]; description?: string; endDate: Date, openSlots: number }): Promise<any> {
     const existingTeam = await this.prisma.team.findFirst({
       where: {
       name: teamDto.name,
@@ -161,10 +161,9 @@ export class CompetitionService {
       throw new BadRequestException('Leader already created a team in this competition');
     }
 
-    const maxMembers = teamDto.maxMembers;
     const members = teamDto.members || [teamDto.leaderId];
 
-    if (members.length > maxMembers) {
+    if (members.length > teamDto.openSlots) {
       throw new BadRequestException('Team size exceeds maximum allowed members');
     }
 
@@ -174,14 +173,15 @@ export class CompetitionService {
         leaderId: teamDto.leaderId,
         competitionId: id,
         members,
-        maxMembers,
-        openSlots: maxMembers - members.length,
+        description: teamDto.description,
+        openSlots: teamDto.openSlots,
+        endDate: teamDto.endDate
       },
       select: {
         id: true,
         name: true,
         openSlots: true,
-        maxMembers: true,
+        description: true
       }
     });
 
@@ -253,7 +253,6 @@ export class CompetitionService {
             id: true,
             name: true,
             openSlots: true,
-            maxMembers: true,
             leaderId: true,
           },
         })

@@ -2,5 +2,7 @@ export class CreateTeamDto {
   name: string;
   leaderId: string;
   members?: string[];
-  maxMembers?: number;
+  description?: string;
+  openSlots: number;
+  endDate: Date;
 }

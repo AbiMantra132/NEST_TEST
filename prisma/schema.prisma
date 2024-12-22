@@ -68,12 +68,13 @@ model CompetitionParticipant {
 model Team {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   name            String
+  description     String
   leaderId        String
   competitionId   String
   members         String[]   @map("members") @db.ObjectId
-  maxMembers      Int
   openSlots       Int
   createdAt       DateTime    @default(now())
+  endDate         DateTime
 }
 
 
