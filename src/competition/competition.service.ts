@@ -1,5 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { Competition, Team, Reimbursement, CompetitionParticipant, User } from '@prisma/client';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  Competition,
+  Team,
+  Reimbursement,
+  CompetitionParticipant,
+  User,
+} from '@prisma/client';
 import { CreateCompetitionDto } from './dto/create-competition.dto';
 import { UpdateCompetitionDto } from './dto/update-competition.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,14 +17,14 @@ import { PrismaService } from '../prisma/prisma.service';
 /**
  * Competition service responsible for managing competition-related operations.
  * @class CompetitionService
- * 
+ *
  * @description
  * This service provides methods for managing competitions, including:
  * - Competition CRUD operations
  * - Team management
  * - Participant registration
  * - Reimbursement handling
- * 
+ *
  * @methods
  * - create: Creates new competition with poster image
  * - findAll: Retrieves all competitions
@@ -25,28 +35,30 @@ import { PrismaService } from '../prisma/prisma.service';
  * - createTeam: Creates new team for competition
  * - submitReimbursement: Handles reimbursement requests
  * - getTeams: Retrieves all teams in a competition
- * 
+ *
  * @throws
  * - BadRequestException: For creation/update failures or invalid operations
  * - NotFoundException: When requested resources aren't found
- * 
+ *
  * @requires
  * - PrismaService - Database service
  * - @nestjs/common decorators and exceptions
  * - Competition related DTOs
- * 
+ *
  * @remarks
  * Handles complex competition management including team formation,
  * participant registration, and financial reimbursements.
  * Implements comprehensive error handling for database operations.
  */
 
-
 @Injectable()
 export class CompetitionService {
   constructor(private prisma: PrismaService) {}
 
-  async create(imageUrl: string, dto: CreateCompetitionDto): Promise<Competition> {
+  async create(
+    imageUrl: string,
+    dto: CreateCompetitionDto,
+  ): Promise<Competition> {
     try {
       return await this.prisma.competition.create({
         data: {
@@ -55,7 +67,9 @@ export class CompetitionService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(`Failed to create competition: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create competition: ${error.message}`,
+      );
     }
   }
 
@@ -79,11 +93,17 @@ export class CompetitionService {
       }
       return competition;
     } catch (error) {
-      throw new NotFoundException(`Failed to fetch competition: ${error.message}`);
+      throw new NotFoundException(
+        `Failed to fetch competition: ${error.message}`,
+      );
     }
   }
 
-  async update(imageUrl: string, id: string, dto: UpdateCompetitionDto): Promise<Competition> {
+  async update(
+    imageUrl: string,
+    id: string,
+    dto: UpdateCompetitionDto,
+  ): Promise<Competition> {
     try {
       return await this.prisma.competition.update({
         where: { id },
@@ -94,7 +114,9 @@ export class CompetitionService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(`Failed to update competition: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to update competition: ${error.message}`,
+      );
     }
   }
 
@@ -104,12 +126,16 @@ export class CompetitionService {
         where: { id },
       });
     } catch (error) {
-      throw new NotFoundException(`Failed to delete competition: ${error.message}`);
+      throw new NotFoundException(
+        `Failed to delete competition: ${error.message}`,
+      );
     }
   }
 
-
-  async joinCompetition(id: string, joinDto: { userId: string; teamId?: string }): Promise<CompetitionParticipant> {
+  async joinCompetition(
+    id: string,
+    joinDto: { userId: string; teamId?: string },
+  ): Promise<CompetitionParticipant> {
     const competition = await this.prisma.competition.findUnique({
       where: { id },
     });
@@ -118,12 +144,13 @@ export class CompetitionService {
       throw new NotFoundException('Competition not found');
     }
 
-    const existingParticipant = await this.prisma.competitionParticipant.findFirst({
-      where: {
-        userId: joinDto.userId,
-        competitionId: id,
-      },
-    });
+    const existingParticipant =
+      await this.prisma.competitionParticipant.findFirst({
+        where: {
+          userId: joinDto.userId,
+          competitionId: id,
+        },
+      });
 
     if (existingParticipant) {
       throw new BadRequestException('User already joined this competition');
@@ -138,11 +165,21 @@ export class CompetitionService {
     });
   }
 
-  async createTeam(id: string, teamDto: { name: string; leaderId: string; members?: string[]; description?: string; endDate: Date, openSlots: number }): Promise<any> {
+  async createTeam(
+    id: string,
+    teamDto: {
+      name: string;
+      leaderId: string;
+      members?: string[];
+      description?: string;
+      endDate: Date;
+      openSlots: number;
+    },
+  ): Promise<any> {
     const existingTeam = await this.prisma.team.findFirst({
       where: {
-      name: teamDto.name,
-      competitionId: id,
+        name: teamDto.name,
+        competitionId: id,
       },
     });
 
@@ -152,19 +189,23 @@ export class CompetitionService {
 
     const leaderExistingTeam = await this.prisma.team.findFirst({
       where: {
-      leaderId: teamDto.leaderId,
-      competitionId: id,
+        leaderId: teamDto.leaderId,
+        competitionId: id,
       },
     });
 
     if (leaderExistingTeam) {
-      throw new BadRequestException('Leader already created a team in this competition');
+      throw new BadRequestException(
+        'Leader already created a team in this competition',
+      );
     }
 
     const members = teamDto.members || [teamDto.leaderId];
 
     if (members.length > teamDto.openSlots) {
-      throw new BadRequestException('Team size exceeds maximum allowed members');
+      throw new BadRequestException(
+        'Team size exceeds maximum allowed members',
+      );
     }
 
     const team = await this.prisma.team.create({
@@ -175,14 +216,14 @@ export class CompetitionService {
         members,
         description: teamDto.description,
         openSlots: teamDto.openSlots,
-        endDate: teamDto.endDate
+        endDate: teamDto.endDate,
       },
       select: {
         id: true,
         name: true,
         openSlots: true,
-        description: true
-      }
+        description: true,
+      },
     });
 
     await this.prisma.competitionParticipant.create({
@@ -191,18 +232,21 @@ export class CompetitionService {
         competitionId: id,
         teamId: team.id,
         isLeader: true,
-      }
-    })
+      },
+    });
 
-    const captain = await this.prisma.user.findUnique({
+    const leader = await this.prisma.user.findUnique({
       where: { id: teamDto.leaderId },
-      select: {id: true, name: true, profile: true, student_id: true}
-    })
+      select: { id: true, name: true, profile: true, student_id: true },
+    });
 
-    return {team: team, captain: captain}
+    return { team: team, leader: leader };
   }
 
-  async submitReimbursement(id: string, reimburseDto: { userId: string; amount: number; description: string }): Promise<Reimbursement> {
+  async submitReimbursement(
+    id: string,
+    reimburseDto: { userId: string; amount: number; description: string },
+  ): Promise<Reimbursement> {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: {
         userId: reimburseDto.userId,
@@ -211,7 +255,9 @@ export class CompetitionService {
     });
 
     if (!participant) {
-      throw new BadRequestException('User is not a participant in this competition');
+      throw new BadRequestException(
+        'User is not a participant in this competition',
+      );
     }
 
     return await this.prisma.reimbursement.create({
@@ -226,15 +272,38 @@ export class CompetitionService {
     });
   }
 
-  async getTeams(id: string): Promise<Team[]> {
-    return await this.prisma.team.findMany({
+  async getTeams(id: string) {
+    const teamData = await this.prisma.team.findMany({
       where: {
         competitionId: id,
       },
+      select: {
+        id: true,
+        name: true,
+        leaderId: true,
+        openSlots: true,
+        description: true,
+        endDate: true,
+      },
     });
+
+    const teamsWithLeaders = await Promise.all(
+      teamData.map(async (team) => {
+        const leader = await this.prisma.user.findUnique({
+          where: { id: team.leaderId },
+          select: { id: true, name: true, profile: true, student_id: true },
+        });
+        return { ...team, leader };
+      }),
+    );
+    
+    return teamsWithLeaders;
   }
 
-  async getUserStatus(competitionId: string, userId: string): Promise<{
+  async getUserStatus(
+    competitionId: string,
+    userId: string,
+  ): Promise<{
     isJoined: boolean;
     hasTeam: boolean;
     isLeader: boolean;

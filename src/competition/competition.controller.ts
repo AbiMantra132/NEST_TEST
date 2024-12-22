@@ -166,7 +166,8 @@ export class CompetitionController {
       );
     }
   }
-  @Get('/:id/team')
+
+  @Get('/:id/teams')
   async getTeams(@Param('id') id: string) {
     try {
       const competition = await this.competitionService.findOne(id);
