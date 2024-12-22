@@ -134,7 +134,7 @@ export class CompetitionService {
 
   async joinCompetition(
     id: string,
-    joinDto: { userId: string; teamId: string },
+    joinDto: { userId: string; teamId?: string },
   ): Promise<CompetitionParticipant> {
     const competition = await this.prisma.competition.findUnique({
       where: { id },
@@ -160,7 +160,7 @@ export class CompetitionService {
       data: {
         userId: joinDto.userId,
         competitionId: id,
-        teamId: joinDto.teamId,
+        teamId: joinDto?.teamId,
       },
     });
   }
