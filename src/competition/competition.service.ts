@@ -284,6 +284,7 @@ export class CompetitionService {
         openSlots: true,
         description: true,
         endDate: true,
+        members: true,
       },
     });
 
