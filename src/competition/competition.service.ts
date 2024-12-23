@@ -13,6 +13,7 @@ import {
 import { CreateCompetitionDto } from './dto/create-competition.dto';
 import { UpdateCompetitionDto } from './dto/update-competition.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { StatusDTO } from './dto';
 
 /**
  * Competition service responsible for managing competition-related operations.
@@ -273,6 +274,33 @@ export class CompetitionService {
         status: 'PENDING',
         updatedAt: new Date(),
       },
+    });
+  }
+
+  async verifyReimbursement(
+    id: string,
+    status: string
+  ): Promise<{id: string, status: string}> {
+    const reimbursement = await this.prisma.reimbursement.findFirst({
+      where: { competitionId: id },
+    });
+
+    if (!reimbursement) {
+      throw new NotFoundException('Reimbursement request not found');
+    }
+
+    return await this.prisma.reimbursement.update({
+      where: {
+        id: reimbursement.id,
+      },
+      data: {
+        status: status,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        status: true,
+      }
     });
   }
 

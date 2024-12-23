@@ -93,7 +93,7 @@ model Reimbursement {
   competitionId   String    @map("competition_id") @db.ObjectId
   userId          String    @map("user_id") @db.ObjectId
   name            String    
-  status          Status    
+  status          String    
   cardNumber      String    
   receiptUrl      String    
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -134,18 +134,9 @@ enum Role {
 }
 
 enum Rank {
-  PESERTA
-  FINALIS
-  JUARA_FAVORIT
   JUARA_3
   JUARA_2
   JUARA_1
-}
-
-enum Status {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 enum Reimburse {

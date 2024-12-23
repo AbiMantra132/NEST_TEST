@@ -16,7 +16,8 @@ import {
   UpdateCompetitionDto,
   CreateTeamDto,
   JoinCompetitionDto,
-  ReimburseDto
+  ReimburseDto,
+  StatusDTO
 } from './dto/index';
 import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -199,6 +200,26 @@ export class CompetitionController {
         id,
         reimburseDto,
       );
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('/:id/verify-reimbursement')
+  async verifyReimbursement(
+    @Param('id') id: string,
+    @Body('status') status: 'PENDING' | 'PROCESS' | 'APPROVED' | 'REJECTED',
+  ) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+      }
+
+      return await this.competitionService.verifyReimbursement(id, status);
     } catch (error) {
       throw new HttpException(
         error.message,
