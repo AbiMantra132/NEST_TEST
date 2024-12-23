@@ -102,7 +102,7 @@ model Reimbursement {
 model History {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   competitionId   String
-  status          String      // ongoing, completed
+  status          String      // pending, ongoing, completed
   isWinner        Boolean?
 }
 

@@ -156,6 +156,14 @@ export class CompetitionService {
       throw new BadRequestException('User already joined this competition');
     }
 
+    await this.prisma.history.create({
+      data: {
+        competitionId: id,
+        status: 'pending',
+        isWinner: false
+      }
+    })
+ 
     return await this.prisma.competitionParticipant.create({
       data: {
         userId: joinDto.userId,
@@ -184,23 +192,16 @@ export class CompetitionService {
     });
 
     if (existingTeam) {
-      throw new BadRequestException('Team name already exists');
+      throw new BadRequestException('Team with this name already exists');
     }
 
-    const leaderExistingTeam = await this.prisma.team.findFirst({
-      where: {
-        leaderId: teamDto.leaderId,
-        competitionId: id,
-      },
-    });
+    const members = await this.prisma.user.findMany({
+      where: { id: teamDto.leaderId },
+      select: {
+        id: true
+      }
+    })
 
-    if (leaderExistingTeam) {
-      throw new BadRequestException(
-        'Leader already created a team in this competition',
-      );
-    }
-
-    const members = teamDto.members || [teamDto.leaderId];
 
     if (members.length > teamDto.openSlots) {
       throw new BadRequestException(
@@ -213,7 +214,7 @@ export class CompetitionService {
         name: teamDto.name,
         leaderId: teamDto.leaderId,
         competitionId: id,
-        members,
+        members : members.map(member => member.id),
         description: teamDto.description,
         openSlots: teamDto.openSlots,
         endDate: teamDto.endDate,
@@ -226,10 +227,12 @@ export class CompetitionService {
       },
     });
 
-    await this.prisma.competitionParticipant.create({
-      data: {
+    await this.prisma.competitionParticipant.updateMany({
+      where: {
         userId: teamDto.leaderId,
-        competitionId: id,
+        competitionId: id
+      },
+      data: {
         teamId: team.id,
         isLeader: true,
       },
