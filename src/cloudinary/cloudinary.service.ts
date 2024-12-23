@@ -25,6 +25,17 @@ export class CloudinaryService {
     }
   }
 
+  async deleteProfileImage(secureUrl: string): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const publicId = secureUrl.split('/').pop().split('.')[0];
+      const result = await cloudinary.uploader.destroy(`user_profile/` + publicId);
+
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
+
   async uploadPoster(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
     try {
       const result = await cloudinary.uploader.upload(file.path, {
@@ -42,6 +53,18 @@ export class CloudinaryService {
       const publicId = secureUrl.split('/').pop().split('.')[0];
       const result = await cloudinary.uploader.destroy(`competition_poster/` + publicId);
 
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async uploadReceipt(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'receipt',
+      });
+      
       return result;
     } catch (error) {
       return error;

@@ -186,12 +186,17 @@ export class CompetitionController {
   }
 
   @Post('/:id/reimburse')
+  @UseInterceptors(FileInterceptor('image', MulterOptions))
   async submitReimbursement(
     @Param('id') id: string,
     @Body() reimburseDto: ReimburseDto,
+    @UploadedFile() file: Express.Multer.File
   ) {
     try {
       const competition = await this.competitionService.findOne(id);
+
+      const url = await this.cloudinaryService.uploadReceipt(file);
+
       if (!competition) {
         throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
@@ -199,6 +204,7 @@ export class CompetitionController {
       return await this.competitionService.submitReimbursement(
         id,
         reimburseDto,
+        url.secure_url
       );
     } catch (error) {
       throw new HttpException(
@@ -229,7 +235,10 @@ export class CompetitionController {
   }
 
   @Get(':id/user-status')
-  async getUserStatus(@Param('id') competitionId: string, @Query('userId') userId: string) {
+  async getUserStatus(
+    @Param('id') competitionId: string,
+    @Query('userId') userId: string,
+  ) {
     try {
       const competition = await this.competitionService.findOne(competitionId);
       if (!competition) {
