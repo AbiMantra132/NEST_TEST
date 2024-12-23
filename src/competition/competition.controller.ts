@@ -194,6 +194,7 @@ export class CompetitionController {
       if (!competition) {
         throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
       }
+
       return await this.competitionService.submitReimbursement(
         id,
         reimburseDto,

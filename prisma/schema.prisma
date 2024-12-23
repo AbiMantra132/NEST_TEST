@@ -58,9 +58,9 @@ model Competition {
 
 model CompetitionParticipant {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String     @map("user_id") @db.ObjectId
-  competitionId   String     @map("competition_id") @db.ObjectId
-  teamId          String?   @map("team_id") @db.ObjectId
+  userId          String      @map("user_id") @db.ObjectId
+  competitionId   String      @map("competition_id") @db.ObjectId
+  teamId          String?     @map("team_id") @db.ObjectId
   reimburseStatus Reimburse?
   isLeader        Boolean     @default(false)
 }
@@ -92,9 +92,10 @@ model Reimbursement {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   competitionId   String    @map("competition_id") @db.ObjectId
   userId          String    @map("user_id") @db.ObjectId
-  amount          Int
-  reason          String    
-  status          Status
+  name            String    
+  status          Status    
+  cardNumber      String    
+  receiptUrl      String    
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @map("updated_at")
 }

@@ -1,6 +1,7 @@
 export class ReimburseDto {
   userId: string;
-  amount: number;
-  description: string;
-  receiptUrl?: string;
+  name: string;
+  receiptUrl: string;
+  bank: string;
+  cardnumber: string;
 }

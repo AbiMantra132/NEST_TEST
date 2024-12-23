@@ -248,7 +248,7 @@ export class CompetitionService {
 
   async submitReimbursement(
     id: string,
-    reimburseDto: { userId: string; amount: number; description: string },
+    reimburseDto: { userId: string; name:string; receiptUrl: string, bank: string, cardnumber: string },
   ): Promise<Reimbursement> {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: {
@@ -267,8 +267,9 @@ export class CompetitionService {
       data: {
         competitionId: id,
         userId: reimburseDto.userId,
-        amount: reimburseDto.amount,
-        reason: reimburseDto.description,
+        receiptUrl: reimburseDto.receiptUrl,
+        cardNumber: reimburseDto.cardnumber,
+        name: reimburseDto.name,
         status: 'PENDING',
         updatedAt: new Date(),
       },
