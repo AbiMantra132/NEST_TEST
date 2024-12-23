@@ -161,10 +161,10 @@ export class CompetitionService {
       data: {
         competitionId: id,
         status: 'pending',
-        isWinner: false
-      }
-    })
- 
+        isWinner: false,
+      },
+    });
+
     return await this.prisma.competitionParticipant.create({
       data: {
         userId: joinDto.userId,
@@ -199,10 +199,9 @@ export class CompetitionService {
     const members = await this.prisma.user.findMany({
       where: { id: teamDto.leaderId },
       select: {
-        id: true
-      }
-    })
-
+        id: true,
+      },
+    });
 
     if (members.length > teamDto.openSlots) {
       throw new BadRequestException(
@@ -215,7 +214,7 @@ export class CompetitionService {
         name: teamDto.name,
         leaderId: teamDto.leaderId,
         competitionId: id,
-        members : members.map(member => member.id),
+        members: members.map((member) => member.id),
         description: teamDto.description,
         openSlots: teamDto.openSlots,
         endDate: teamDto.endDate,
@@ -231,7 +230,7 @@ export class CompetitionService {
     await this.prisma.competitionParticipant.updateMany({
       where: {
         userId: teamDto.leaderId,
-        competitionId: id
+        competitionId: id,
       },
       data: {
         teamId: team.id,
@@ -249,8 +248,13 @@ export class CompetitionService {
 
   async submitReimbursement(
     id: string,
-    reimburseDto: { userId: string; name:string; bank: string; cardnumber: string },
-    url: string
+    reimburseDto: {
+      userId: string;
+      name: string;
+      bank: string;
+      cardnumber: string;
+    },
+    url: string,
   ): Promise<Reimbursement> {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: {
@@ -280,8 +284,8 @@ export class CompetitionService {
 
   async verifyReimbursement(
     id: string,
-    status: string
-  ): Promise<{id: string, status: string}> {
+    status: string,
+  ): Promise<{ id: string; status: string }> {
     const reimbursement = await this.prisma.reimbursement.findFirst({
       where: { competitionId: id },
     });
@@ -301,7 +305,7 @@ export class CompetitionService {
       select: {
         id: true,
         status: true,
-      }
+      },
     });
   }
 
@@ -330,7 +334,7 @@ export class CompetitionService {
         return { ...team, leader };
       }),
     );
-    
+
     return teamsWithLeaders;
   }
 
@@ -373,5 +377,32 @@ export class CompetitionService {
       teamDetails: team,
       hasReimburse,
     };
+  }
+
+  async getCompetitionMembers(competitionId: string, leaderId: string) {
+    try {
+      const team = await this.prisma.team.findFirst({
+        where: { leaderId, competitionId },
+        select: { leaderId: true, members: true },
+      });
+
+      if (!team) {
+        throw new NotFoundException('Team not found');
+      }
+
+      const leader = await this.prisma.user.findUnique({
+        where: { id: team.leaderId },
+        select: { id: true, name: true, profile: true, student_id: true },
+      });
+
+      const members = await this.prisma.user.findMany({
+        where: { id: { in: team.members } },
+        select: { id: true, name: true, profile: true, student_id: true },
+      });
+
+      return { leader, members };
+    } catch (error) {
+      throw new BadRequestException('Failed to get competition members');
+    }
   }
 }

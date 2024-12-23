@@ -257,4 +257,21 @@ export class CompetitionController {
       );
     }
   }
+  
+
+  @Post('/:id/members')
+  async getCompetitionMembers(@Param('id') id: string, @Body() leaderId: string) {
+    try {
+      const competition = await this.competitionService.findOne(id);
+      if (!competition) {
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.competitionService.getCompetitionMembers(id, leaderId);
+    } catch (error) {
+      throw new HttpException(
+        `Error retrieving members for competition with id ${id}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
