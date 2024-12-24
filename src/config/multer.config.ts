@@ -14,7 +14,7 @@ const MulterOptions = {
 };
 
 function checkFileType(file: Express.Multer.File, cb: multer.FileFilterCallback) {
-  const filetypes = /jpeg|jpg|png/;
+  const filetypes = /jpeg|jpg|png|pdf/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 

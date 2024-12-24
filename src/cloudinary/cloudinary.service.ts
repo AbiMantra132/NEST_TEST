@@ -70,4 +70,50 @@ export class CloudinaryService {
       return error;
     }
   }
+
+  async uploadEvidence(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'evidence',
+      });
+      
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async deleteEvidence (secureUrl: string): Promise<UploadApiResponse | UploadApiErrorResponse>  {
+    try {
+      const publicId = secureUrl.split('/').pop().split('.')[0];
+      const result = await cloudinary.uploader.destroy(`evidence/` + publicId);
+
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async uploadCertificate(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'certificate',
+      });
+      
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async deleteCertificate (secureUrl: string): Promise<UploadApiResponse | UploadApiErrorResponse>  {
+    try {
+      const publicId = secureUrl.split('/').pop().split('.')[0];
+      const result = await cloudinary.uploader.destroy(`certificate/` + publicId);
+
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
 }

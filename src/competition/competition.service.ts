@@ -405,4 +405,38 @@ export class CompetitionService {
       throw new BadRequestException('Failed to get competition members');
     }
   }
+
+  async uploadResult(
+    competitionId: string,
+    userId: string,
+    competitionDto: { result: string; evidenceUrl?: string, certificateUrl: string },
+  ) {
+    const participant = await this.prisma.competitionParticipant.findFirst({
+      where: { competitionId, userId },
+    });
+
+    if (!participant) {
+      throw new NotFoundException(
+        'You are not registered for this competition.',
+      );
+    }
+
+    const result = await this.prisma.competitionResult.create({
+      data: {
+        competitionId,
+        userId,
+        result: competitionDto.result,
+        statusUrl: competitionDto.certificateUrl,
+        evidenceUrl: competitionDto.evidenceUrl,
+      },
+    });
+
+    // Update participant result reference
+    await this.prisma.competitionParticipant.update({
+      where: { id: participant.id },
+      data: { resultId: result.id },
+    });
+
+    return { message: 'Result successfully uploaded.', result };
+  }
 }

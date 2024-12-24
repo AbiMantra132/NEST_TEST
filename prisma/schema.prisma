@@ -62,6 +62,7 @@ model CompetitionParticipant {
   competitionId   String      @map("competition_id") @db.ObjectId
   teamId          String?     @map("team_id") @db.ObjectId
   reimburseStatus Reimburse?
+  resultId        String      @map("result_id") @db.ObjectId
   isLeader        Boolean     @default(false)
 }
 
@@ -71,10 +72,20 @@ model Team {
   description     String
   leaderId        String
   competitionId   String
-  members         String[]   @map("members") @db.ObjectId
+  members         String[]    @map("members") @db.ObjectId
   openSlots       Int
   createdAt       DateTime    @default(now())
   endDate         DateTime
+}
+
+model CompetitionResult {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  competitionId   String      @db.ObjectId
+  userId          String      @db.ObjectId
+  result          String      // e.g., "Menang", "Kalah", "Finalis", etc.
+  statusUrl       String?     // URL file/bukti hasil lomba.
+  evidenceUrl     String?     // URL file/bukti hasil lomba.
+  createdAt       DateTime    @default(now())
 }
 
 

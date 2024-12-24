@@ -17,7 +17,7 @@ import {
   CreateTeamDto,
   JoinCompetitionDto,
   ReimburseDto,
-  StatusDTO
+  StatusDTO,
 } from './dto/index';
 import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -190,7 +190,7 @@ export class CompetitionController {
   async submitReimbursement(
     @Param('id') id: string,
     @Body() reimburseDto: ReimburseDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     try {
       const competition = await this.competitionService.findOne(id);
@@ -204,7 +204,7 @@ export class CompetitionController {
       return await this.competitionService.submitReimbursement(
         id,
         reimburseDto,
-        url.secure_url
+        url.secure_url,
       );
     } catch (error) {
       throw new HttpException(
@@ -257,10 +257,12 @@ export class CompetitionController {
       );
     }
   }
-  
 
   @Post('/:id/members')
-  async getCompetitionMembers(@Param('id') id: string, @Body() leaderId: string) {
+  async getCompetitionMembers(
+    @Param('id') id: string,
+    @Body() leaderId: string,
+  ) {
     try {
       const competition = await this.competitionService.findOne(id);
       if (!competition) {
@@ -274,4 +276,45 @@ export class CompetitionController {
       );
     }
   }
+
+@Post('/:id/upload-result')
+@UseInterceptors(FileInterceptor('evidence', MulterOptions))
+@UseInterceptors(FileInterceptor('certificate', MulterOptions))
+async uploadResult(
+  @Param('id') competitionId: string,
+  @Body() body: { userId: string; result: string; },
+  @UploadedFile('evidence') evidenceFile?: Express.Multer.File,
+  @UploadedFile('certificate') certificateFile?: Express.Multer.File,
+) {
+  try {
+    const competition = await this.competitionService.findOne(competitionId);
+    if (!competition) {
+      throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+    }
+
+    let evidenceUrl: string | undefined;
+    if (evidenceFile) {
+      const uploadResult = await this.cloudinaryService.uploadEvidence(evidenceFile);
+      evidenceUrl = uploadResult.secure_url;
+    }
+
+    let certificateUrl: string | undefined;
+    if(certificateFile) {
+      const uploadResult = await this.cloudinaryService.uploadCertificate(certificateFile);
+      certificateUrl = uploadResult.secure_url;
+    }
+
+    return await this.competitionService.uploadResult(competitionId, body.userId, {
+      result: body.result,
+      evidenceUrl,
+      certificateUrl
+    });
+
+  } catch (error) {
+    throw new HttpException(
+      error.message,
+      error.status || HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}
 }
