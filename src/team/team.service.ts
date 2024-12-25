@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Team, User } from '@prisma/client';
-import { AcceptTeamMemberDto, JoinTeamDto, StopTeamDto, CreateTeamDto } from './dto/index';
+import {
+  AcceptTeamMemberDto,
+  JoinTeamDto,
+  StopTeamDto,
+  CreateTeamDto,
+} from './dto/index';
 
 @Injectable()
 export class TeamService {
@@ -20,17 +29,44 @@ export class TeamService {
     Pick<Team, keyof typeof this.returnAllTeamDTO>[]
   > {
     try {
-      return await this.prisma.team.findMany({
+      const teams = await this.prisma.team.findMany({
         select: this.returnAllTeamDTO,
       });
+
+      const teamsWithDetails = await Promise.all(
+        teams.map(async (team) => {
+          const leader = await this.prisma.user.findUnique({
+            where: { id: team.leaderId },
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+              student_id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          });
+
+          const competition = await this.prisma.competition.findUnique({
+            where: { id: team.competitionId },
+          });
+
+          return {
+            ...team,
+            leader,
+            competition,
+          };
+        }),
+      );
+
+      return teamsWithDetails;
     } catch (error) {
       throw new BadRequestException('Failed to fetch teams');
     }
   }
 
-  async getTeamById(
-    id: string,
-  ): Promise<any> {
+  async getTeamById(id: string): Promise<any> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id },
@@ -45,10 +81,18 @@ export class TeamService {
         where: {
           id: team.leaderId,
         },
-        select: { id: true, name: true, profile: true, student_id: true, firstName: true, lastName: true, email: true },
+        select: {
+          id: true,
+          name: true,
+          profile: true,
+          student_id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
       });
 
-      team["leader"] = leader;
+      team['leader'] = leader;
 
       return { team };
     } catch (error) {
