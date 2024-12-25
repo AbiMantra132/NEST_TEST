@@ -264,7 +264,7 @@ export class AuthService {
           pass: process.env.SMTP_PASSWORD,
         },
         tls: {
-          rejectUnauthorized: true,
+          rejectUnauthorized: true,t
         },
       });
 

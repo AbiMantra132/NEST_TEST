@@ -180,7 +180,7 @@ export class CompetitionService {
       name: string;
       leaderId: string;
       members?: string[];
-      description?: string;
+      description: string;
       endDate: Date;
       openSlots: number;
     },
