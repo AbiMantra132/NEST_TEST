@@ -431,7 +431,6 @@ export class CompetitionService {
       },
     });
 
-    // Update participant result reference
     await this.prisma.competitionParticipant.update({
       where: { id: participant.id },
       data: { resultId: result.id },

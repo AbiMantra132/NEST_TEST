@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Patch,
   Query,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CompetitionService } from './competition.service';
 import {
@@ -20,7 +21,7 @@ import {
   StatusDTO,
 } from './dto/index';
 import { UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import MulterOptions from 'src/config/multer.config';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
@@ -277,44 +278,52 @@ export class CompetitionController {
     }
   }
 
-@Post('/:id/upload-result')
-@UseInterceptors(FileInterceptor('evidence', MulterOptions))
-@UseInterceptors(FileInterceptor('certificate', MulterOptions))
-async uploadResult(
-  @Param('id') competitionId: string,
-  @Body() body: { userId: string; result: string; },
-  @UploadedFile('evidence') evidenceFile?: Express.Multer.File,
-  @UploadedFile('certificate') certificateFile?: Express.Multer.File,
-) {
-  try {
-    const competition = await this.competitionService.findOne(competitionId);
-    if (!competition) {
-      throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+  @Post('/:id/upload-result')
+  @UseInterceptors(FilesInterceptor('files', 2, MulterOptions))
+  async uploadResult(
+    @Param('id') competitionId: string,
+    @Body() body: { userId: string; result: string },
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    try {
+      const competition = await this.competitionService.findOne(competitionId);
+      if (!competition) {
+        throw new HttpException('Competition not found', HttpStatus.NOT_FOUND);
+      }
+
+      const evidenceFile = files?.find((file) => file.fieldname === 'evidence');
+      const certificateFile = files?.find(
+        (file) => file.fieldname === 'certificate',
+      );
+
+      let evidenceUrl: string | undefined;
+      if (evidenceFile) {
+        const uploadResult =
+          await this.cloudinaryService.uploadEvidence(evidenceFile);
+        evidenceUrl = uploadResult.secure_url;
+      }
+
+      let certificateUrl: string | undefined;
+      if (certificateFile) {
+        const uploadResult =
+        await this.cloudinaryService.uploadCertificate(certificateFile);
+        certificateUrl = uploadResult.secure_url;
+      }
+
+      return await this.competitionService.uploadResult(
+        competitionId,
+        body.userId,
+        {
+          result: body.result,
+          evidenceUrl, 
+          certificateUrl 
+        },
+      );
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-
-    let evidenceUrl: string | undefined;
-    if (evidenceFile) {
-      const uploadResult = await this.cloudinaryService.uploadEvidence(evidenceFile);
-      evidenceUrl = uploadResult.secure_url;
-    }
-
-    let certificateUrl: string | undefined;
-    if(certificateFile) {
-      const uploadResult = await this.cloudinaryService.uploadCertificate(certificateFile);
-      certificateUrl = uploadResult.secure_url;
-    }
-
-    return await this.competitionService.uploadResult(competitionId, body.userId, {
-      result: body.result,
-      evidenceUrl,
-      certificateUrl
-    });
-
-  } catch (error) {
-    throw new HttpException(
-      error.message,
-      error.status || HttpStatus.INTERNAL_SERVER_ERROR
-    );
   }
-}
 }
