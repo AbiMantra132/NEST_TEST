@@ -128,10 +128,12 @@ export class TeamService {
       });
 
       const enrichedTeam = {
-        ...team,
+        id: team.id,
+        name: team.name,
+        description: team.description,
         leader,
         member,
-        competition
+        competition,
       };
 
       return { team: enrichedTeam };
