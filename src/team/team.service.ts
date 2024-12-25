@@ -108,7 +108,7 @@ export class TeamService {
         },
       });
 
-      const memberDetails = await Promise.all(
+      const member = await Promise.all(
         team.members.map(async (memberId) => {
           return await this.prisma.user.findUnique({
             where: { id: memberId },
@@ -130,7 +130,7 @@ export class TeamService {
       const enrichedTeam = {
         ...team,
         leader,
-        memberDetails,
+        member,
         competition
       };
 
