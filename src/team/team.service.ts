@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Team } from '@prisma/client';
+import { Team, User } from '@prisma/client';
 import { AcceptTeamMemberDto, JoinTeamDto, StopTeamDto, CreateTeamDto } from './dto/index';
 
 @Injectable()
@@ -30,17 +30,24 @@ export class TeamService {
 
   async getTeamById(
     id: string,
-  ): Promise<Pick<Team, keyof typeof this.returnAllTeamDTO>> {
+  ): Promise<{ team: Pick<Team, 'id' | 'name' | 'competitionId' | 'leaderId' | 'members' | 'openSlots'>, leader: User }> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id },
+        select: this.returnAllTeamDTO,
       });
 
       if (!team) {
         throw new NotFoundException(`Team with ID ${id} not found`);
       }
 
-      return team;
+      const leader = await this.prisma.user.findUnique({
+        where: {
+          id: team.leaderId,
+        }
+      });
+
+      return { team, leader };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
