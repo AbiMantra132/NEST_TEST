@@ -63,7 +63,7 @@ export class TeamService {
 
           const competition = await this.prisma.competition.findUnique({
             where: { id: team.competitionId },
-            select: { title: true, id: true },
+            select: { title: true, id: true, type: true, endDate: true, level: true, category: true },
           });
 
           return {
@@ -124,7 +124,7 @@ export class TeamService {
 
       const competition = await this.prisma.competition.findUnique({
         where: { id: team.competitionId },
-        select: { title: true, id: true },
+        select: { title: true, id: true, endDate: true, type: true, category: true, level: true },
       });
 
       const enrichedTeam = {
