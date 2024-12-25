@@ -5,9 +5,32 @@ import { AcceptTeamMemberDto, JoinTeamDto, StopTeamDto, CreateTeamDto } from './
 
 @Injectable()
 export class TeamService {
+  private returnAllTeamDTO = {
+    id: true,
+    name: true,
+    competitionId: true,
+    leaderId: true,
+    members: true,
+    openSlots: true,
+  };
+
   constructor(private prisma: PrismaService) {}
 
-  async getTeamById(id: string): Promise<Team> {
+  async getAllTeam(): Promise<
+    Pick<Team, keyof typeof this.returnAllTeamDTO>[]
+  > {
+    try {
+      return await this.prisma.team.findMany({
+        select: this.returnAllTeamDTO,
+      });
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch teams');
+    }
+  }
+
+  async getTeamById(
+    id: string,
+  ): Promise<Pick<Team, keyof typeof this.returnAllTeamDTO>> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id },
@@ -25,7 +48,6 @@ export class TeamService {
       throw new BadRequestException('Failed to fetch team');
     }
   }
-
 
   async joinTeam(teamId: string, dto: JoinTeamDto): Promise<Team> {
     try {
@@ -45,19 +67,20 @@ export class TeamService {
         throw new BadRequestException('User is already a member of this team');
       }
 
-      // Check if user is already in another team for this competition
-      const existingParticipation = await this.prisma.competitionParticipant.findFirst({
-        where: {
-          userId: dto.userId,
-          competitionId: team.competitionId,
-        },
-      });
+      const existingParticipation =
+        await this.prisma.competitionParticipant.findFirst({
+          where: {
+            userId: dto.userId,
+            competitionId: team.competitionId,
+          },
+        });
 
       if (existingParticipation) {
-        throw new BadRequestException('User is already participating in this competition');
+        throw new BadRequestException(
+          'User is already participating in this competition',
+        );
       }
 
-      // Create pending participation
       await this.prisma.competitionParticipant.create({
         data: {
           userId: dto.userId,
@@ -70,7 +93,10 @@ export class TeamService {
 
       return team;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new BadRequestException('Failed to join team');
@@ -88,7 +114,9 @@ export class TeamService {
       }
 
       if (team.leaderId !== dto.leaderId) {
-        throw new BadRequestException('Only team leader can stop team publication');
+        throw new BadRequestException(
+          'Only team leader can stop team publication',
+        );
       }
 
       // Set openSlots to 0 to prevent new joins
@@ -97,7 +125,10 @@ export class TeamService {
         data: { openSlots: 0 },
       });
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new BadRequestException('Failed to stop team publication');
@@ -144,7 +175,10 @@ export class TeamService {
 
       return updatedTeam;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new BadRequestException('Failed to accept team member');
