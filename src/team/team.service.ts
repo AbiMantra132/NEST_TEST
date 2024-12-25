@@ -30,7 +30,7 @@ export class TeamService {
 
   async getTeamById(
     id: string,
-  ): Promise<{ team: Pick<Team, 'id' | 'name' | 'competitionId' | 'leaderId' | 'members' | 'openSlots'>, leader: User }> {
+  ): Promise<any> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id },
@@ -44,10 +44,13 @@ export class TeamService {
       const leader = await this.prisma.user.findUnique({
         where: {
           id: team.leaderId,
-        }
+        },
+        select: { id: true, name: true, profile: true, student_id: true, firstName: true, lastName: true, email: true },
       });
 
-      return { team, leader };
+      team["leader"] = leader;
+
+      return { team };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
