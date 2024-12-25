@@ -21,6 +21,7 @@ export class TeamService {
     leaderId: true,
     members: true,
     openSlots: true,
+    description: true
   };
 
   constructor(private prisma: PrismaService) {}
