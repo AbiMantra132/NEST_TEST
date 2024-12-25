@@ -63,7 +63,7 @@ export class TeamService {
 
           const competition = await this.prisma.competition.findUnique({
             where: { id: team.competitionId },
-            select: { title: true, id: true endDate: true, level: true, category: true },
+            select: { title: true, id: true,  endDate: true, level: true, category: true },
           });
 
           return {
