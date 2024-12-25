@@ -62,7 +62,7 @@ model CompetitionParticipant {
   competitionId   String      @map("competition_id") @db.ObjectId
   teamId          String?     @map("team_id") @db.ObjectId
   reimburseStatus Reimburse?
-  resultId        String      @map("result_id") @db.ObjectId
+  resultId        String?     @map("result_id") @db.ObjectId
   isLeader        Boolean     @default(false)
 }
 
