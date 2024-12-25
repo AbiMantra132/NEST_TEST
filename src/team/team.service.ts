@@ -21,7 +21,7 @@ export class TeamService {
     leaderId: true,
     members: true,
     openSlots: true,
-    description: true
+    description: true,
   };
 
   constructor(private prisma: PrismaService) {}
@@ -55,25 +55,25 @@ export class TeamService {
                   id: true,
                   name: true,
                   profile: true,
-                  student_id: true
+                  student_id: true,
                 },
               });
-            })
+            }),
           );
 
           const competition = await this.prisma.competition.findUnique({
             where: { id: team.competitionId },
-            select: {title: true, id: true},
+            select: { title: true, id: true },
           });
 
-            return {
+          return {
             id: team.id,
             name: team.name,
             description: team.description,
             leader,
             competition,
-            members
-            };
+            members,
+          };
         }),
       );
 
@@ -105,13 +105,36 @@ export class TeamService {
           student_id: true,
           firstName: true,
           lastName: true,
-          email: true,
         },
       });
 
-      team['leader'] = leader;
+      const memberDetails = await Promise.all(
+        team.members.map(async (memberId) => {
+          return await this.prisma.user.findUnique({
+            where: { id: memberId },
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+              student_id: true,
+            },
+          });
+        }),
+      );
 
-      return { team };
+      const competition = await this.prisma.competition.findUnique({
+        where: { id: team.competitionId },
+        select: { title: true, id: true },
+      });
+
+      const enrichedTeam = {
+        ...team,
+        leader,
+        memberDetails,
+        competition
+      };
+
+      return { team: enrichedTeam };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
