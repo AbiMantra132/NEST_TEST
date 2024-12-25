@@ -26,9 +26,7 @@ export class TeamService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getAllTeam(): Promise<
-    Pick<Team, keyof typeof this.returnAllTeamDTO>[]
-  > {
+  async getAllTeam(): Promise<any> {
     try {
       const teams = await this.prisma.team.findMany({
         select: this.returnAllTeamDTO,
@@ -49,16 +47,33 @@ export class TeamService {
             },
           });
 
+          const members = await Promise.all(
+            team.members.map(async (memberId) => {
+              return await this.prisma.user.findUnique({
+                where: { id: memberId },
+                select: {
+                  id: true,
+                  name: true,
+                  profile: true,
+                  student_id: true
+                },
+              });
+            })
+          );
+
           const competition = await this.prisma.competition.findUnique({
             where: { id: team.competitionId },
-            select: {endDate: true, title: true, startDate: true, id: true},
+            select: {title: true, id: true},
           });
 
-          return {
-            ...team,
+            return {
+            id: team.id,
+            name: team.name,
+            description: team.description,
             leader,
             competition,
-          };
+            members
+            };
         }),
       );
 
