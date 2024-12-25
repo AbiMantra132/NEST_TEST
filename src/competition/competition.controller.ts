@@ -21,7 +21,7 @@ import {
   StatusDTO,
 } from './dto/index';
 import { UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import MulterOptions from 'src/config/multer.config';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
@@ -279,7 +279,7 @@ export class CompetitionController {
   }
 
   @Post('/:id/upload-result')
-  @UseInterceptors(FilesInterceptor('files', 2, MulterOptions))
+  @UseInterceptors(AnyFilesInterceptor(MulterOptions))
   async uploadResult(
     @Param('id') competitionId: string,
     @Body() body: { userId: string; result: string },
@@ -295,6 +295,8 @@ export class CompetitionController {
       const certificateFile = files?.find(
         (file) => file.fieldname === 'certificate',
       );
+
+      console.log(files);
 
       let evidenceUrl: string | undefined;
       if (evidenceFile) {

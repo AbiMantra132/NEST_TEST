@@ -421,6 +421,16 @@ export class CompetitionService {
       );
     }
 
+    const existingResult = await this.prisma.competitionResult.findFirst({
+      where: { competitionId, userId },
+    });
+
+    if (existingResult) {
+      throw new BadRequestException(
+        'Result already exists for this competition and user.',
+      );
+    }
+
     const result = await this.prisma.competitionResult.create({
       data: {
         competitionId,
