@@ -254,7 +254,7 @@ export class AuthService {
   ): Promise<void> {
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
         port: 465,
         logger: true,
         debug: true,
@@ -264,7 +264,7 @@ export class AuthService {
           pass: process.env.SMTP_PASSWORD,
         },
         tls: {
-          rejectUnauthorized: true,t
+          rejectUnauthorized: true
         },
       });
 
