@@ -58,28 +58,55 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto): Promise<User> {
-    const { name, email, password, nim, major, cohort } = signupDto;
+    try {
+      const { name, email, password, nim, major, cohort } = signupDto;
 
-    await this.checkUserExists(nim);
-    const Usermajor = await this.findMajor(major);
-    this.validateNim(nim);
+      // Check for duplicate NIM
+      await this.checkUserExists(nim);
 
-    const hashedPassword: string = await bcrypt.hash(password, 10);
+      // Validate NIM format
+      this.validateNim(nim);
 
-    const user = await this.createUser({
-      name,
-      email,
-      password: hashedPassword,
-      cohort,
-      nim,
-      majorId: Usermajor.id,
-    });
+      // Find major
+      const userMajor = await this.findMajor(major);
+      if (!userMajor) {
+        throw new BadRequestException('Invalid major specified.');
+      }
 
-    const otp = this.generateOtp();
-    await this.updateUserOtp(user.student_id, otp);
-    await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
+      // Validate password strength
+      if (password.length < 8) {
+        throw new BadRequestException('Password must be at least 8 characters long.');
+      }
 
-    return user;
+      const hashedPassword: string = await bcrypt.hash(password, 10);
+
+      const user = await this.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        cohort,
+        nim,
+        majorId: userMajor.id,
+      }).catch((error) => {
+        if (error.code === 'P2002') {
+          throw new ConflictException('A user with this information already exists.');
+        }
+        throw new InternalServerErrorException('Error creating user account.');
+      });
+
+      const otp = this.generateOtp();
+      await this.updateUserOtp(user.student_id, otp);
+      await this.sendEmail(user.email, 'OTP Verification', `Your OTP is: ${otp}`);
+
+      return user;
+    } catch (error) {
+      if (error instanceof ConflictException || 
+          error instanceof BadRequestException ||
+          error instanceof InternalServerErrorException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred during signup.');
+    }
   }
 
   async login(loginDto: LoginDto): Promise<User> {

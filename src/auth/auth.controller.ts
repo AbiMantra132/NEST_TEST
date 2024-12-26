@@ -69,19 +69,7 @@ export class AuthController {
         user,
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      if (error.code === 'P2002') {
-        throw new ConflictException('Student_Id already exists');
-      }
-
-      console.error('Signup error:', error);
-
-      throw new InternalServerErrorException(
-        'Unable to process signup request',
-      );
+      throw error;
     }
   }
 
