@@ -192,7 +192,7 @@ export class AuthController {
     }
   }
 
-  @Get('/logout')
+  @Post('/logout')
   async logout(@Res() response: ExpressResponse) {
     try {
       response.clearCookie('auth-token', {
