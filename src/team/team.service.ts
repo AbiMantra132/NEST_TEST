@@ -213,6 +213,7 @@ export class TeamService {
           },
         )}] `,
         receiverId: team.leaderId,
+        teamId: teamId
       },
     });
 
@@ -289,6 +290,12 @@ export class TeamService {
     memberId: string,
     action: 'approve' | 'reject',
   ): Promise<any> {
+    await this.prisma.notification.deleteMany({
+      where: {
+        receiverId: leaderId,
+        teamId: teamId,
+      },
+    });
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },

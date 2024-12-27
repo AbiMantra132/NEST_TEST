@@ -124,6 +124,7 @@ model Notification {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   senderId    String    @map("sender_id") @db.ObjectId
   receiverId  String    @map("leader_id") @db.ObjectId
+  teamId      String   @map("team_id") @db.ObjectId
   title       String
   message     String
   createdAt   DateTime  @default(now()) @map("created_at")
