@@ -7,8 +7,8 @@ export class NotificationService {
 
   async getNotificationById(id: string) {
     try {
-      const notification = await this.prisma.notification.findUnique({
-        where: { id },
+      const notification = await this.prisma.notification.findMany({
+        where: { receiverId: id },
       });
       if (!notification) {
         throw new Error('Notification not found');
