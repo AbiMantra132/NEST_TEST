@@ -11,7 +11,7 @@ export class NotificationService {
         where: { receiverId: id },
       });
 
-      const receiverUser = await this.prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id },
         select: {
           id: true,
@@ -21,7 +21,7 @@ export class NotificationService {
         }
       });
 
-      const senderUsers = await Promise.all(notification.map(async (notif) => {
+      const sender = await Promise.all(notification.map(async (notif) => {
         return await this.prisma.user.findUnique({
           where: { id: notif.senderId },
           select: {
@@ -33,7 +33,7 @@ export class NotificationService {
         });
       }));
 
-      if (!receiverUser) {
+      if (!user) {
         throw new Error('Receiver user not found');
       }
 
@@ -42,10 +42,10 @@ export class NotificationService {
       }
 
       return {
-        receiverUser,
+        user,
         notifications: notification.map((notif, index) => ({
           ...notif,
-          senderUser: senderUsers[index],
+          senderUser: sender[index],
         })),
       };
     } catch (error) {
