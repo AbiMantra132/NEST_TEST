@@ -209,6 +209,11 @@ export class CompetitionService {
       );
     }
 
+    // find current members
+    const currentMembersCount = await this.prisma.competitionParticipant.count({
+      where: { competitionId: id, userId: teamDto.leaderId },
+    });
+
     const team = await this.prisma.team.create({
       data: {
         name: teamDto.name,
@@ -216,8 +221,10 @@ export class CompetitionService {
         competitionId: id,
         members: members.map((member) => member.id),
         description: teamDto.description,
-        openSlots: teamDto.openSlots,
+        maxMembers: teamDto.openSlots,
         endDate: teamDto.endDate,
+        openSlots: teamDto.openSlots - currentMembersCount,
+        status: 'ACTIVE'
       },
       select: {
         id: true,

@@ -192,6 +192,25 @@ export class AuthController {
     }
   }
 
+  @Get('/logout')
+  async logout(@Res() response: ExpressResponse) {
+    try {
+      response.clearCookie('auth-token', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none'
+      });
+
+      return response.status(200).json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw new InternalServerErrorException('Unable to process logout request');
+    }
+  }
+
   // @Post('/delete-profile')
   // async deleteProfile(
   //   @Body('nim') nim: string,

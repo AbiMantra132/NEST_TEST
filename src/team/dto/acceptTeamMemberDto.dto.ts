@@ -1,5 +1,5 @@
-export class AcceptTeamMemberDto {
-  teamId: string;
+ export class AcceptTeamMemberDto {
   leaderId: string;
-  userId: string;
+  memberId: string;
+  action: "approve" | "reject";
 }

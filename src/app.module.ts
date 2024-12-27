@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { MulterModule } from '@nestjs/platform-express';
 import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { NotificationModule } from './notification/notification.module';
 import * as multer from 'multer';
 import * as path from 'path';
 
@@ -21,6 +22,7 @@ import * as path from 'path';
     CompetitionModule,
     TeamModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, CloudinaryService],

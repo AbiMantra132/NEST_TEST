@@ -76,6 +76,8 @@ model Team {
   openSlots       Int
   createdAt       DateTime    @default(now())
   endDate         DateTime
+  status          String?
+  maxMembers      Int?
 }
 
 model CompetitionResult {
@@ -116,6 +118,16 @@ model History {
   competitionId   String
   status          String      // pending, ongoing, completed
   isWinner        Boolean?
+}
+
+model Notification {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  senderId    String    @map("sender_id") @db.ObjectId
+  receiverId  String    @map("leader_id") @db.ObjectId
+  title       String
+  message     String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 }
 
 enum Level {

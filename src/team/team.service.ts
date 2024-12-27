@@ -22,6 +22,7 @@ export class TeamService {
     members: true,
     openSlots: true,
     description: true,
+    status: true
   };
 
   constructor(private prisma: PrismaService) {}
@@ -63,7 +64,13 @@ export class TeamService {
 
           const competition = await this.prisma.competition.findUnique({
             where: { id: team.competitionId },
-            select: { title: true, id: true,  endDate: true, level: true, category: true },
+            select: {
+              title: true,
+              id: true,
+              endDate: true,
+              level: true,
+              category: true,
+            },
           });
 
           return {
@@ -125,7 +132,13 @@ export class TeamService {
 
       const competition = await this.prisma.competition.findUnique({
         where: { id: team.competitionId },
-        select: { title: true, id: true, endDate: true, category: true, level: true },
+        select: {
+          title: true,
+          id: true,
+          endDate: true,
+          category: true,
+          level: true,
+        },
       });
 
       const enrichedTeam = {
@@ -148,79 +161,116 @@ export class TeamService {
   }
 
   async joinTeam(teamId: string, dto: JoinTeamDto): Promise<Team> {
+    const team = await this.prisma.team.findFirst({
+      where: { id: teamId },
+    });
+
+    if (!team) {
+      throw new NotFoundException(`Team with ID ${teamId} not found`);
+    }
+
+    if (team.openSlots === 0) {
+      throw new BadRequestException('Team is already full');
+    }
+
+    if (team.members.includes(dto.userId)) {
+      throw new BadRequestException('User is already a member of this team');
+    }
+
+    const existingParticipation =
+      await this.prisma.competitionParticipant.findFirst({
+        where: {
+          userId: dto.userId,
+          competitionId: team.competitionId,
+        },
+      });
+
+    if (existingParticipation) {
+      throw new BadRequestException(
+        'User is already participating in this competition',
+      );
+    }
+
+    // Create notification for team leader
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+      select: { name: true },
+    });
+
+    await this.prisma.notification.create({
+      data: {
+        senderId: dto.userId,
+        title: 'Permintaan Bergabung Tim',
+        message: `${user.name} mengajukan untuk bergabung ke team ${team.name}. pada [${new Date().toLocaleDateString(
+          'id-ID',
+          {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          },
+        )}] `,
+        receiverId: team.leaderId,
+      },
+    });
+
+    return team;
+  }
+
+  async stopTeamPublication(teamId: string, leaderId: string): Promise<Team> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },
+      });
+
+      const competition = await this.prisma.competition.findUnique({
+        where: {
+          id: team.competitionId,
+        },
       });
 
       if (!team) {
         throw new NotFoundException(`Team with ID ${teamId} not found`);
       }
 
-      if (team.openSlots === 0) {
-        throw new BadRequestException('Team is already full');
+      // Check if user is team leader or admin
+      if (team.leaderId !== leaderId) {
+        throw new BadRequestException(
+          'Only team leader or admin can stop team publication',
+        );
       }
 
-      if (team.members.includes(dto.userId)) {
-        throw new BadRequestException('User is already a member of this team');
-      }
-
-      const existingParticipation =
-        await this.prisma.competitionParticipant.findFirst({
-          where: {
-            userId: dto.userId,
-            competitionId: team.competitionId,
+      // Check if competition is expired
+      if (competition && new Date(competition.endDate) < new Date()) {
+        await this.prisma.team.update({
+          where: { id: teamId },
+          data: {
+            openSlots: 0,
+            status: 'INACTIVE',
           },
         });
-
-      if (existingParticipation) {
-        throw new BadRequestException(
-          'User is already participating in this competition',
-        );
+        throw new BadRequestException('Competition has expired');
       }
 
-      await this.prisma.competitionParticipant.create({
-        data: {
-          userId: dto.userId,
-          competitionId: team.competitionId,
-          teamId: team.id,
-          isLeader: false,
-          reimburseStatus: 'PENDING',
-        },
-      });
-
-      return team;
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
-      throw new BadRequestException('Failed to join team');
-    }
-  }
-
-  async stopTeamPublication(dto: StopTeamDto): Promise<Team> {
-    try {
-      const team = await this.prisma.team.findUnique({
-        where: { id: dto.teamId },
-      });
-
-      if (!team) {
-        throw new NotFoundException(`Team with ID ${dto.teamId} not found`);
+      // Check if team is full
+      if (team.openSlots === team.maxMembers) {
+        return await this.prisma.team.update({
+          where: { id: teamId },
+          data: {
+            status: 'INACTIVE',
+          },
+        });
       }
 
-      if (team.leaderId !== dto.leaderId) {
-        throw new BadRequestException(
-          'Only team leader can stop team publication',
-        );
-      }
-
-      // Set openSlots to 0 to prevent new joins
+      // Set openSlots to 0 and status to inactive to prevent new joins
       return await this.prisma.team.update({
-        where: { id: dto.teamId },
-        data: { openSlots: 0 },
+        where: { id: teamId },
+        data: {
+          openSlots: 0,
+          status: 'INACTIVE',
+        },
       });
     } catch (error) {
       if (
@@ -233,45 +283,70 @@ export class TeamService {
     }
   }
 
-  async acceptTeamMember(dto: AcceptTeamMemberDto): Promise<Team> {
+  async acceptTeamMember(
+    teamId: string,
+    leaderId: string,
+    memberId: string,
+    action: 'approve' | 'reject',
+  ): Promise<any> {
     try {
       const team = await this.prisma.team.findUnique({
-        where: { id: dto.teamId },
+        where: { id: teamId },
       });
 
       if (!team) {
-        throw new NotFoundException(`Team with ID ${dto.teamId} not found`);
+        throw new NotFoundException(`Team with ID ${teamId} not found`);
       }
 
-      if (team.leaderId !== dto.leaderId) {
-        throw new BadRequestException('Only team leader can accept members');
+      if (team.leaderId !== leaderId) {
+        throw new BadRequestException(
+          'Only team leader can perform this action',
+        );
       }
 
-      if (team.openSlots === 0) {
-        throw new BadRequestException('Team is already full');
+      if (action === 'approve') {
+        if (team.openSlots === 0) {
+          throw new BadRequestException('Team is already full');
+        }
+
+        // Update team members and open slots
+        const updatedTeam = await this.prisma.team.update({
+          where: { id: teamId },
+          data: {
+            members: [...team.members, memberId],
+            openSlots: team.openSlots - 1,
+          },
+        });
+
+        // Update competition participant status
+        const leaderCompetitionParticipant =
+          await this.prisma.competitionParticipant.findFirst({
+            where: {
+              userId: leaderId,
+              teamId,
+              competitionId: team.competitionId,
+            },
+            select: {
+              reimburseStatus: true,
+              resultId: true,
+            },
+          });
+
+
+        await this.prisma.competitionParticipant.create({
+          data: {
+            userId: memberId,
+            competitionId: team.competitionId,
+            reimburseStatus: leaderCompetitionParticipant.reimburseStatus,
+            resultId: leaderCompetitionParticipant.resultId,
+            isLeader: false,
+          },
+        });
+
+        return {updatedTeam, status: 'approved'};
+      } else {
+        return { msg: 'rejected by leader', status: 'rejected' };
       }
-
-      // Update team members and open slots
-      const updatedTeam = await this.prisma.team.update({
-        where: { id: dto.teamId },
-        data: {
-          members: [...team.members, dto.userId],
-          openSlots: team.openSlots - 1,
-        },
-      });
-
-      // Update competition participant status
-      await this.prisma.competitionParticipant.updateMany({
-        where: {
-          userId: dto.userId,
-          teamId: dto.teamId,
-        },
-        data: {
-          reimburseStatus: 'APPROVED',
-        },
-      });
-
-      return updatedTeam;
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -279,7 +354,43 @@ export class TeamService {
       ) {
         throw error;
       }
-      throw new BadRequestException('Failed to accept team member');
+      throw new BadRequestException(
+        `Failed to ${action} team member: ${error.message}`,
+      );
+    }
+  }
+
+  async deleteTeam(teamId: string, leaderId: string): Promise<void> {
+    try {
+      const team = await this.prisma.team.findUnique({
+        where: { id: teamId },
+      });
+
+      if (!team) {
+        throw new NotFoundException(`Team with ID ${teamId} not found`);
+      }
+
+      if (team.leaderId !== leaderId) {
+        throw new BadRequestException('Only team leader can delete the team');
+      }
+
+      // Delete all competition participants associated with the team
+      await this.prisma.competitionParticipant.deleteMany({
+        where: { teamId },
+      });
+
+      // Delete the team
+      await this.prisma.team.delete({
+        where: { id: teamId },
+      });
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to delete team');
     }
   }
 }
