@@ -185,7 +185,7 @@ export class AuthService {
       role: user.role,
       cohort: user.cohort,
       profile: user.profile,
-      major: userMajor,
+      major: userMajor.major,
     };
 
     const payload = { User };
