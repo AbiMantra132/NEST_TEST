@@ -12,6 +12,7 @@ import * as nodemailer from 'nodemailer';
 import { User } from '@prisma/client';
 import { MajorType } from '@prisma/client';
 import { SignupDto, LoginDto } from './dto/index';
+import { first, last } from 'rxjs';
 
 /**
  * Authentication service responsible for handling user authentication operations.
@@ -181,6 +182,8 @@ export class AuthService {
       id: user.id,
       student_id: user.student_id,
       name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       role: user.role,
       cohort: user.cohort,
