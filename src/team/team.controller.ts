@@ -53,6 +53,24 @@ export class TeamController {
     }
   }
 
+  @Get("/:id/pendingRequests")
+  async getPendingTeamMembers(@Param('id') id: string) {
+    try {
+      if (!id || typeof id !== 'string') {
+        throw new BadRequestException('Invalid team ID provided');
+      }
+
+      return await this.teamService.getPendingTeamMembers(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Error retrieving pending team members for team with ID ${id}`,
+      );
+    }
+  }
+
   @Post(':id/join')
   @HttpCode(HttpStatus.CREATED)
   async requestJoinTeam(

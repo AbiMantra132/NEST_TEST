@@ -130,6 +130,15 @@ model Notification {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 }
 
+model UserJoinPending {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @map("user_id") @db.ObjectId
+  teamId          String    @map("team_id") @db.ObjectId
+  competitionId   String    @map("competition_id") @db.ObjectId
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at") 
+}
+
 enum Level {
   Provinsi
   Nasional

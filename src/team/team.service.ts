@@ -177,17 +177,13 @@ export class TeamService {
       throw new BadRequestException('User is already a member of this team');
     }
 
-    const existingNotification = await this.prisma.notification.findFirst({
-      where: {
-        senderId: dto.userId,
-        receiverId: team.leaderId,
+    await this.prisma.userJoinPending.create({
+      data: {
+        userId: dto.userId,
         teamId: teamId,
+        competitionId: team.competitionId,
       },
     });
-
-    if (existingNotification) {
-      throw new BadRequestException('You have already sent a join request to this team');
-    }
 
     const existingParticipation =
       await this.prisma.competitionParticipant.findFirst({
@@ -229,7 +225,46 @@ export class TeamService {
       },
     });
 
+    const pendingUser = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+      select: {
+      id: true,
+      name: true,
+      profile: true,
+      student_id: true,
+      },
+    });
+
     return team;
+  }
+  
+  async getPendingTeamMembers(teamId: string): Promise<any> {
+    try {
+      const pendingUsers = await this.prisma.userJoinPending.findMany({
+        where: { teamId },
+        select: {
+          userId: true,
+        },
+      });
+
+      const users = await Promise.all(
+        pendingUsers.map(async (pendingUser) => {
+          return await this.prisma.user.findUnique({
+            where: { id: pendingUser.userId },
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+              student_id: true,
+            },
+          });
+        }),
+      );
+
+      return users;
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch pending users');
+    }
   }
 
   async stopTeamPublication(teamId: string, leaderId: string): Promise<Team> {
@@ -304,6 +339,14 @@ export class TeamService {
         teamId: teamId,
       },
     });
+
+    await this.prisma.userJoinPending.deleteMany({
+      where: {
+        userId: memberId,
+        teamId: teamId,
+      },
+    });
+    
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },
