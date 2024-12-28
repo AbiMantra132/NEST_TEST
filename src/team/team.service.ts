@@ -177,6 +177,18 @@ export class TeamService {
       throw new BadRequestException('User is already a member of this team');
     }
 
+    const existingNotification = await this.prisma.notification.findFirst({
+      where: {
+        senderId: dto.userId,
+        receiverId: team.leaderId,
+        teamId: teamId,
+      },
+    });
+
+    if (existingNotification) {
+      throw new BadRequestException('You have already sent a join request to this team');
+    }
+
     const existingParticipation =
       await this.prisma.competitionParticipant.findFirst({
         where: {
@@ -236,14 +248,12 @@ export class TeamService {
         throw new NotFoundException(`Team with ID ${teamId} not found`);
       }
 
-      // Check if user is team leader or admin
       if (team.leaderId !== leaderId) {
         throw new BadRequestException(
           'Only team leader or admin can stop team publication',
         );
       }
 
-      // Check if competition is expired
       if (competition && new Date(competition.endDate) < new Date()) {
         await this.prisma.team.update({
           where: { id: teamId },
@@ -255,7 +265,6 @@ export class TeamService {
         throw new BadRequestException('Competition has expired');
       }
 
-      // Check if team is full
       if (team.openSlots === team.maxMembers) {
         return await this.prisma.team.update({
           where: { id: teamId },
@@ -265,7 +274,6 @@ export class TeamService {
         });
       }
 
-      // Set openSlots to 0 and status to inactive to prevent new joins
       return await this.prisma.team.update({
         where: { id: teamId },
         data: {

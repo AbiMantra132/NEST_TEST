@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MajorModule } from './major/major.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './users/users.module';
 import { CompetitionModule } from './competition/competition.module';
 import { TeamModule } from './team/team.module';
 import { AuthModule } from './auth/auth.module';
@@ -11,6 +10,7 @@ import { AuthMiddleware } from './middleware/auth.middleware';
 import { MulterModule } from '@nestjs/platform-express';
 import { CloudinaryService } from './cloudinary/cloudinary.service';
 import { NotificationModule } from './notification/notification.module';
+import { ProfileModule } from './profile/profile.module';
 import * as multer from 'multer';
 import * as path from 'path';
 
@@ -18,11 +18,11 @@ import * as path from 'path';
   imports: [
     MajorModule,
     PrismaModule,
-    UsersModule,
     CompetitionModule,
     TeamModule,
     AuthModule,
     NotificationModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService, CloudinaryService],

@@ -173,7 +173,20 @@ export class AuthService {
   }
 
   generateToken(user: User): string {
-    const payload = { user };
+    let User = {
+      id: user.id,
+      student_id: user.student_id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      cohort: user.cohort,
+      profile: user.profile,
+    };
+    User["major"] = this.prisma.major.findUnique({
+      where: { id: user.majorId }
+    })
+    const payload = { User };
+
     return this.jwtService.sign(payload);
   }
 

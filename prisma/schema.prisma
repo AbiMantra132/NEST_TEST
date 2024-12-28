@@ -90,7 +90,6 @@ model CompetitionResult {
   createdAt       DateTime    @default(now())
 }
 
-
 model Achievements {
   id              String    @id @default(auto())   @map("_id") @db.ObjectId
   userId          String    @map("user_id")        @db.ObjectId
