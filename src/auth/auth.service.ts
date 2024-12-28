@@ -172,8 +172,12 @@ export class AuthService {
     return { user, status: true };
   }
 
-  generateToken(user: User): string {
-    let User = {
+  async generateToken(user: User): Promise<string> {
+    const userMajor = await this.prisma.major.findUnique({
+      where: { id: user.majorId },
+    });
+
+    const User = {
       id: user.id,
       student_id: user.student_id,
       name: user.name,
@@ -181,10 +185,9 @@ export class AuthService {
       role: user.role,
       cohort: user.cohort,
       profile: user.profile,
+      major: userMajor,
     };
-    User["major"] = this.prisma.major.findUnique({
-      where: { id: user.majorId }
-    })
+
     const payload = { User };
 
     return this.jwtService.sign(payload);

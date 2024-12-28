@@ -7,7 +7,6 @@ export class ProfileService {
 
   async getTeams(userId: string) {
     try {
-      // implementation
       const teams = await this.prismaService.team.findMany({
         where: {
           members: {
@@ -63,7 +62,6 @@ export class ProfileService {
 
   async getCompetitions(userId: string) {
     try {
-      // implementation
       const competitionParticipants = await this.prismaService.competitionParticipant.findMany({
         where: {
           userId: userId,
@@ -100,9 +98,9 @@ export class ProfileService {
     }
   }
 
-  async getReimburses() {
+  async getReimburses(userId: string) {
     try {
-      // implementation
+      
     } catch (err) {
       // error handling
     }

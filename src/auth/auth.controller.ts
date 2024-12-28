@@ -80,7 +80,7 @@ export class AuthController {
   ) {
     try {
       const user: User = await this.authService.login(loginDto);
-      const token = this.authService.generateToken(user);
+      const token = await this.authService.generateToken(user);
 
       response.cookie('auth-token', token, {
         httpOnly: true,
