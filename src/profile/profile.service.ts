@@ -203,7 +203,11 @@ export class ProfileService {
         lastName: updatedProfile.lastName,
         major: data.major,
         profile: updatedProfile.profile,
-        password: updatedProfile.password
+        password: updatedProfile.password,
+        student_id: updatedProfile.student_id,
+        cohort: updatedProfile.cohort,
+        email : updatedProfile.email,
+        gender: updatedProfile.gender
       }
 
       return returnValue;
