@@ -1,11 +1,26 @@
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { MajorType } from '@prisma/client';
+import { Patch } from '@nestjs/common';
 
 
 @Controller('profile')
 export class ProfileController {
 constructor(private readonly profileService: ProfileService) {}
+@Put ("/:id")
+async updateProfile(
+  @Body() body: { firstname: string; lastname: string; major: MajorType; imgprofile: string; password: string },
+  @Param('id') id: string
+) {
+  try {
+    const { firstname, lastname, major, imgprofile, password } = body;
+    return await this.profileService.updateProfile(id, { firstname, lastname, major, imgprofile, password });
+  } catch (err) {
+    console.error('Error in updateProfile controller:', err);
+    throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+}
 
 @Post("/teams")
 async getTeams(@Body() body: { userId: string }) {
@@ -49,4 +64,5 @@ async getReimburseDetail(@Param('id') id: string) {
     throw new HttpException('Could not fetch reimburse detail', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
+
 }

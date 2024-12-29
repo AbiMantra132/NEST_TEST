@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MajorType } from '@prisma/client';
 
 @Injectable()
 export class ProfileService {
@@ -148,7 +149,7 @@ export class ProfileService {
 
   async getReimburseDetail(id: string) {
     try {
-      const reimburses = await this.prismaService.reimbursement.findUnique({
+      const reimburses = await this.prismaService.reimbursement.findUnique ({
         where: {
           id: id,
         },
@@ -169,6 +170,46 @@ export class ProfileService {
     } catch (err) {
       console.error('Error fetching reimburse detail:', err);
       throw new HttpException('Could not fetch reimburse detail', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateProfile(
+    id: string,
+    data: { firstname: string; lastname: string; major: MajorType; imgprofile: string; password: string }
+  ) {
+    try {
+      const Major = await this.prismaService.major.findFirst({
+        where: { major: data.major },
+        select: { id: true },
+      });
+
+      if (!Major) {
+        throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
+      }
+
+      const updatedProfile = await this.prismaService.user.update({
+        where: { id: id },
+        data: {
+          firstName: data.firstname,
+          lastName: data.lastname,
+          majorId: Major.id,
+          profile: data.imgprofile,
+          password: data.password,
+        },
+      });
+
+      const returnValue = {
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        major: data.major,
+        profile: updatedProfile.profile,
+        password: updatedProfile.password
+      }
+
+      return returnValue;
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
