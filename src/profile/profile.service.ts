@@ -6,6 +6,23 @@ import { MajorType } from '@prisma/client';
 export class ProfileService {
   constructor(private prismaService: PrismaService) {}
 
+  async getProfileById(userId: string) {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      return user;
+    } catch (err) {
+      console.error('Error fetching user by ID:', err);
+      throw new HttpException('Could not fetch user by ID', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getTeams(userId: string) {
     try {
       const teams = await this.prismaService.team.findMany({
@@ -20,6 +37,8 @@ export class ProfileService {
           endDate: true,
           name: true,
           leaderId: true,
+          openSlots: true,
+          members: true,
         },
       });
 
@@ -40,17 +59,46 @@ export class ProfileService {
         },
       });
 
+      const memberIds = teams.flatMap((team) => team.members);
+      const uniqueMemberIds = [...new Set(memberIds)];
+
+      const members = await this.prismaService.user.findMany({
+        where: {
+          id: {
+            in: uniqueMemberIds,
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          profile: true,
+          student_id: true,
+        },
+      });
+
       const response = teams.map((team) => {
         const leader = leaders.find((leader) => leader.id === team.leaderId);
+        const teamMembers = team.members.map((memberId) => {
+          const member = members.find((member) => member.id === memberId);
+          return member
+        ? {
+            studentId: member.student_id,
+            name: member.name,
+            profile: member.profile,
+          }
+        : null;
+        });
+
         return {
           ...team,
           leader: leader
-            ? {
-                studentId: leader.student_id,
-                name: leader.name,
-                profile: leader.profile,
-              }
-            : null,
+        ? {
+            studentId: leader.student_id,
+            name: leader.name,
+            profile: leader.profile,
+          }
+        : null,
+          members: teamMembers,
         };
       });
 
@@ -92,6 +140,9 @@ export class ProfileService {
           imagePoster: true,
           category: true,
           level: true,
+          type: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
@@ -175,16 +226,20 @@ export class ProfileService {
 
   async updateProfile(
     id: string,
-    data: { firstname: string; lastname: string; major: MajorType; imgprofile: string; password: string }
+    data: { firstname?: string; lastname?: string; major?: MajorType; imgprofile?: string; password?: string }
   ) {
     try {
-      const Major = await this.prismaService.major.findFirst({
-        where: { major: data.major },
-        select: { id: true },
-      });
+      let majorId = undefined;
+      if (data.major) {
+        const Major = await this.prismaService.major.findFirst({
+          where: { major: data.major },
+          select: { id: true },
+        });
 
-      if (!Major) {
-        throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
+        if (!Major) {
+          throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
+        }
+        majorId = Major.id;
       }
 
       const updatedProfile = await this.prismaService.user.update({
@@ -192,7 +247,7 @@ export class ProfileService {
         data: {
           firstName: data.firstname,
           lastName: data.lastname,
-          majorId: Major.id,
+          majorId: majorId,
           profile: data.imgprofile,
           password: data.password,
         },
@@ -206,9 +261,9 @@ export class ProfileService {
         password: updatedProfile.password,
         student_id: updatedProfile.student_id,
         cohort: updatedProfile.cohort,
-        email : updatedProfile.email,
+        email: updatedProfile.email,
         gender: updatedProfile.gender
-      }
+      };
 
       return returnValue;
     } catch (err) {
