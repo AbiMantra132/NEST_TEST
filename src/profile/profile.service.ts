@@ -148,7 +148,7 @@ export class ProfileService {
 
   async getReimburseDetail(id: string) {
     try {
-      const reimburses = await this.prismaService.reimbursement.findMany({
+      const reimburses = await this.prismaService.reimbursement.findUnique({
         where: {
           id: id,
         },
