@@ -23,6 +23,9 @@ export class ProfileController {
       lastname?: string;
       major?: MajorType;
       password?: string;
+      gender?: string;
+      cohort?: string;
+      student_id?: string;
     },
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -36,12 +39,15 @@ export class ProfileController {
       await this.cloudinaryService.deleteProfileImage(file.path);
     }
     try {
-      const { firstname, lastname, major, password } = body;
+      const { firstname, lastname, major, password, gender, cohort, student_id } = body;
       return await this.profileService.updateProfile(id, {
         firstname,
         lastname,
         major,
-        password
+        password,
+        gender,
+        cohort,
+        student_id,
       });
     } catch (err) {
       console.error('Error in updateProfile controller:', err);

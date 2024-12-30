@@ -226,7 +226,7 @@ export class ProfileService {
 
   async updateProfile(
     id: string,
-    data: { firstname?: string; lastname?: string; major?: MajorType; imgprofile?: string; password?: string }
+    data: { firstname?: string; lastname?: string; major?: MajorType; imgprofile?: string; password?: string, gender?: string, cohort?: string, student_id?: string },
   ) {
     try {
       let majorId = undefined;
