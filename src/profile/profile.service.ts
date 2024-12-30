@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MajorType } from '@prisma/client';
+import { $Enums, MajorType } from '@prisma/client';
 
 @Injectable()
 export class ProfileService {
@@ -91,13 +91,7 @@ export class ProfileService {
 
         return {
           ...team,
-          leader: leader
-        ? {
-            studentId: leader.student_id,
-            name: leader.name,
-            profile: leader.profile,
-          }
-        : null,
+          leader: leader,
           members: teamMembers,
         };
       });
@@ -163,35 +157,11 @@ export class ProfileService {
           id: true,
           name: true,
           status: true,
-          userId: true,
           competitionId: true,
         },
       });
 
-      const user = await this.prismaService.user.findUnique({
-        where: {
-          id: userId,
-        },
-        select: {
-          id: true,
-          name: true,
-          profile: true,
-          student_id: true,
-        },
-      });
-
-      const response = reimburses.map((reimburse) => ({
-        ...reimburse,
-        user: user
-          ? {
-              studentId: user.student_id,
-              name: user.name,
-              profile: user.profile,
-            }
-          : null,
-      }));
-
-      return response;
+      return reimburses;
     } catch (err) {
       console.error('Error fetching reimburses:', err);
       throw new HttpException('Could not fetch reimburses', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -226,7 +196,7 @@ export class ProfileService {
 
   async updateProfile(
     id: string,
-    data: { firstname?: string; lastname?: string; major?: MajorType; imgprofile?: string; password?: string, gender?: string, cohort?: string, student_id?: string },
+    data: { firstname?: string; lastname?: string; major?: MajorType; password?: string, gender?: string, cohort?: string, student_id?: string, newProfile?: string },
   ) {
     try {
       let majorId = undefined;
@@ -242,16 +212,37 @@ export class ProfileService {
         majorId = Major.id;
       }
 
-      const updatedProfile = await this.prismaService.user.update({
+      let updatedProfile: { id: string; name: string; createdAt: Date; updatedAt: Date; student_id: string; firstName: string | null; lastName: string | null; email: string; otp: string; gender: string | null; role: $Enums.Role; password: string; cohort: string; profile: string | null; majorId: string; };
+
+      if(data.newProfile !== undefined && data.newProfile.length > 0) {
+        updatedProfile = await this.prismaService.user.update({
+          where: { id: id },
+          data: {
+            firstName: data.firstname,
+            lastName: data.lastname,
+            majorId: majorId,
+            profile: data.newProfile !== undefined && data.newProfile.length > 0 ? data.newProfile : undefined,
+            password: data.password,
+            gender: data.gender,
+            cohort: data.cohort,
+            student_id: data.student_id,
+          },
+        });
+      } else {
+      updatedProfile = await this.prismaService.user.update({
         where: { id: id },
         data: {
           firstName: data.firstname,
           lastName: data.lastname,
           majorId: majorId,
-          profile: data.imgprofile,
           password: data.password,
+          gender: data.gender,
+          cohort: data.cohort,
+          student_id: data.student_id,
         },
       });
+      }
+
 
       const returnValue = {
         firstName: updatedProfile.firstName,
