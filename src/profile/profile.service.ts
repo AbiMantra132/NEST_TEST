@@ -39,6 +39,7 @@ export class ProfileService {
           leaderId: true,
           openSlots: true,
           members: true,
+          id: true,
         },
       });
 
@@ -140,7 +141,35 @@ export class ProfileService {
         },
       });
 
-      return competitions;
+      const competitionResults = await this.prismaService.competitionResult.findMany({
+        where: {
+          userId: userId,
+        },
+        select: {
+          id: true,
+          competitionId: true,
+          result: true,
+          statusUrl: true,
+          evidenceUrl: true,
+          createdAt: true,
+        },
+      });
+
+
+      const response = competitions.map((competition) => {
+        const result = competitionResults.find(
+          (result) => result.competitionId === competition.id,
+        );
+        return {
+          ...competition,
+          result: result ? result.result : null,
+          statusUrl: result ? result.statusUrl : null,
+          evidenceUrl: result ? result.evidenceUrl : null,
+        };
+      });
+
+      return response;
+
     } catch (err) {
       console.error('Error fetching competitions:', err);
       throw new HttpException('Could not fetch competitions', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -152,12 +181,6 @@ export class ProfileService {
       const reimburses = await this.prismaService.reimbursement.findMany({
         where: {
           userId: userId,
-        },
-        select: {
-          id: true,
-          name: true,
-          status: true,
-          competitionId: true,
         },
       });
 

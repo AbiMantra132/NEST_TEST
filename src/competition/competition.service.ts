@@ -250,6 +250,16 @@ export class CompetitionService {
       select: { id: true, name: true, profile: true, student_id: true },
     });
 
+    await this.prisma.competitionResult.create({
+      data: {
+      competitionId: id,
+      userId: teamDto.leaderId,
+      statusUrl: '',
+      evidenceUrl: '',
+      updatedAt: new Date(),
+      },
+    });
+
     return { team: team, leader: leader };
   }
 
@@ -438,13 +448,15 @@ export class CompetitionService {
       );
     }
 
-    const result = await this.prisma.competitionResult.create({
+    const result = await this.prisma.competitionResult.update({
+      where: {
+        id: participant.resultId,
+      },
       data: {
-        competitionId,
-        userId,
-        result: competitionDto.result,
-        statusUrl: competitionDto.certificateUrl,
-        evidenceUrl: competitionDto.evidenceUrl,
+      result: competitionDto.result,
+      statusUrl: competitionDto.certificateUrl,
+      evidenceUrl: competitionDto.evidenceUrl,
+      updatedAt: new Date(),
       },
     });
 

@@ -84,10 +84,11 @@ model CompetitionResult {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   competitionId   String      @db.ObjectId
   userId          String      @db.ObjectId
-  result          String      // e.g., "Menang", "Kalah", "Finalis", etc.
+  result          String      @default("Ongoing") // e.g., "Menang", "Kalah", "Finalis", etc.
   statusUrl       String?     // URL file/bukti hasil lomba.
   evidenceUrl     String?     // URL file/bukti hasil lomba.
   createdAt       DateTime    @default(now())
+  updatedAt       DateTime  @map("updated_at") 
 }
 
 model Achievements {
