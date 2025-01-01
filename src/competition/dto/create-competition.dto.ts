@@ -4,7 +4,6 @@ export class CreateCompetitionDto {
   category: string;
   level: level;
   type: type;
-  imagePoster: string;
   linkGuidebook: string;
   linkPendaftaran: string;
   startDate: Date;
