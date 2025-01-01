@@ -40,6 +40,7 @@ export class ProfileService {
           openSlots: true,
           members: true,
           id: true,
+          competitionId: true,
         },
       });
 
@@ -77,6 +78,22 @@ export class ProfileService {
         },
       });
 
+      const competitionIds = teams.map((team) => team.competitionId).filter((id) => id !== null);
+      const uniqueCompetitionIds = [...new Set(competitionIds)];
+
+      const competitions = await this.prismaService.competition.findMany({
+        where: {
+          id: {
+        in: uniqueCompetitionIds,
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          level: true
+        },
+      });
+
       const response = teams.map((team) => {
         const leader = leaders.find((leader) => leader.id === team.leaderId);
         const teamMembers = team.members.map((memberId) => {
@@ -90,10 +107,15 @@ export class ProfileService {
         : null;
         });
 
+        const competition = competitions.find(
+          (competition) => competition.id === team.competitionId,
+        );
+
         return {
           ...team,
           leader: leader,
           members: teamMembers,
+          competition: competition || null,
         };
       });
 
@@ -184,7 +206,30 @@ export class ProfileService {
         },
       });
 
-      return reimburses;
+      const competitionIds = reimburses.map((reimburse) => reimburse.competitionId);
+      const competitions = await this.prismaService.competition.findMany({
+        where: {
+          id: {
+            in: competitionIds,
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+        },
+      });
+
+      const response = reimburses.map((reimburse) => {
+        const competition = competitions.find(
+          (competition) => competition.id === reimburse.competitionId,
+        );
+        return {
+          ...reimburse,
+          competition: competition || null,
+        };
+      });
+
+      return response;
     } catch (err) {
       console.error('Error fetching reimburses:', err);
       throw new HttpException('Could not fetch reimburses', HttpStatus.INTERNAL_SERVER_ERROR);

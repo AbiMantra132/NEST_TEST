@@ -223,7 +223,7 @@ export class CompetitionService {
         description: teamDto.description,
         maxMembers: teamDto.openSlots + 1,
         endDate: teamDto.endDate,
-        openSlots: teamDto.openSlots - currentMembersCount,
+        openSlots: teamDto.openSlots + 1 - currentMembersCount,
         status: 'ACTIVE'
       },
       select: {
@@ -363,6 +363,7 @@ export class CompetitionService {
     hasTeam: boolean;
     isLeader: boolean;
     teamDetails: any;
+    reimburseDetail: Reimbursement;
     hasReimburse: boolean;
   }> {
     const participant = await this.prisma.competitionParticipant.findFirst({
@@ -386,12 +387,16 @@ export class CompetitionService {
     const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
       where: { userId, competitionId },
     }));
+    const reimburseDetail = await this.prisma.reimbursement.findFirst({
+      where: { userId, competitionId },
+    });
 
     return {
       isJoined: !!participant,
       hasTeam: !!team,
       isLeader: !!isLeader,
       teamDetails: team,
+      reimburseDetail: reimburseDetail,
       hasReimburse,
     };
   }

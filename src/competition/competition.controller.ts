@@ -250,6 +250,7 @@ export class CompetitionController {
         competitionId,
         userId,
       );
+      
       return status;
     } catch (error) {
       throw new HttpException(
@@ -295,8 +296,6 @@ export class CompetitionController {
       const certificateFile = files?.find(
         (file) => file.fieldname === 'certificate',
       );
-
-      console.log(files);
 
       let evidenceUrl: string | undefined;
       if (evidenceFile) {

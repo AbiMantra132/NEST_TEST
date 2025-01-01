@@ -98,7 +98,7 @@ model Achievements {
   rank            Rank
   certificate_url String
   createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @map("updated_at") 
+  updatedAt       DateTime  @map("updated_at")
 }
 
 model Reimbursement {
