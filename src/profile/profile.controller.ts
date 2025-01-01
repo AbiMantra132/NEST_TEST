@@ -95,7 +95,7 @@ export class ProfileController {
       return await this.profileService.getReimburses(userId);
     } catch (err) {
       console.error('Error in getReimburses controller:', err);
-      throw new HttpException(
+      throw new HttpException( 
         'Could not fetch reimburses',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

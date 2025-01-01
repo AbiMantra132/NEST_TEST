@@ -221,7 +221,7 @@ export class CompetitionService {
         competitionId: id,
         members: members.map((member) => member.id),
         description: teamDto.description,
-        maxMembers: teamDto.openSlots,
+        maxMembers: teamDto.openSlots + 1,
         endDate: teamDto.endDate,
         openSlots: teamDto.openSlots - currentMembersCount,
         status: 'ACTIVE'

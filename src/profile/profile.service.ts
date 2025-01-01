@@ -162,7 +162,7 @@ export class ProfileService {
         );
         return {
           ...competition,
-          result: result ? result.result : null,
+          result: result ? result.result : "PESERTA",
           statusUrl: result ? result.statusUrl : null,
           evidenceUrl: result ? result.evidenceUrl : null,
         };
