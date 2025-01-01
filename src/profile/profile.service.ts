@@ -238,7 +238,7 @@ export class ProfileService {
 
   async getReimburseDetail(id: string) {
     try {
-      const reimburses = await this.prismaService.reimbursement.findUnique ({
+      const reimburses = await this.prismaService.reimbursement.findUnique({
         where: {
           id: id,
         },
@@ -254,6 +254,29 @@ export class ProfileService {
           competitionId: true,
         },
       });
+
+      if (!reimburses) {
+        throw new HttpException('Reimbursement not found', HttpStatus.NOT_FOUND);
+      }
+
+      const competition = await this.prismaService.competition.findUnique({
+        where: {
+          id: reimburses.competitionId,
+        },
+        select: {
+          id: true,
+          title: true,
+          level: true,
+          endDate: true,
+          startDate: true,
+          description: true,
+        },
+      });
+
+      return {
+        ...reimburses,
+        competition: competition || null,
+      };
 
       return reimburses;
     } catch (err) {

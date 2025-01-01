@@ -9,6 +9,7 @@ import {
   Reimbursement,
   CompetitionParticipant,
   User,
+  CompetitionResult,
 } from '@prisma/client';
 import { CreateCompetitionDto } from './dto/create-competition.dto';
 import { UpdateCompetitionDto } from './dto/update-competition.dto';
@@ -363,7 +364,7 @@ export class CompetitionService {
     hasTeam: boolean;
     isLeader: boolean;
     teamDetails: any;
-    reimburseDetail: Reimbursement;
+    competitionResult: any;
     hasReimburse: boolean;
   }> {
     const participant = await this.prisma.competitionParticipant.findFirst({
@@ -387,16 +388,17 @@ export class CompetitionService {
     const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
       where: { userId, competitionId },
     }));
-    const reimburseDetail = await this.prisma.reimbursement.findFirst({
+    const competitionResult = await this.prisma.competitionResult.findFirst({
       where: { userId, competitionId },
-    });
+      select: {result: true, evidenceUrl: true}
+    })
 
     return {
       isJoined: !!participant,
       hasTeam: !!team,
       isLeader: !!isLeader,
       teamDetails: team,
-      reimburseDetail: reimburseDetail,
+      competitionResult: competitionResult,
       hasReimburse,
     };
   }
