@@ -119,6 +119,7 @@ export class AdminService {
         select: {
           id: true,
           student_id: true,
+          profile: true
         },
       });
 
@@ -141,7 +142,8 @@ export class AdminService {
         select: {
           id: true,
           name: true,
-          email: true,
+          student_id: true,
+          profile: true
         },
       });
 
