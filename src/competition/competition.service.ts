@@ -295,6 +295,7 @@ export class CompetitionService {
         name: reimburseDto.name,
         status: 'PENDING',
         updatedAt: new Date(),
+        bankName: reimburseDto.bank,
       },
     });
   }

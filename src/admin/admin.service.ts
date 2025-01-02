@@ -88,6 +88,7 @@ export class AdminService {
           updatedAt: true,
           userId: true,
           competitionId: true,
+          bankName: true
         },
       });
 

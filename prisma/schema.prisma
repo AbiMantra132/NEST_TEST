@@ -111,6 +111,7 @@ model Reimbursement {
   receiptUrl      String    
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @map("updated_at")
+  bankName        String
 }
 
 model History {
