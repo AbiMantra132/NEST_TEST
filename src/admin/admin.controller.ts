@@ -120,7 +120,7 @@ export class AdminController {
   @Patch('competition/:idCompetition/edit')
   @UseInterceptors(FileInterceptor('poster', MulterOptions))
   async editCompetition(
-    @Param('id') id: string,
+    @Param('idCompetition') id: string,
     @UploadedFile() file: Express.Multer.File,
     @Body() updateDto: UpdateCompetitionDto,
   ) {

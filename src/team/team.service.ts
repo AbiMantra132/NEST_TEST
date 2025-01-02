@@ -461,7 +461,7 @@ export class TeamService {
           name: updatedTeam.name,
           description: updatedTeam.description,
           openSlots: updatedTeam.openSlots,
-          endDate: competition.endDate,
+          endDate: competition.endDate, 
           leader,
           members,
           competition,

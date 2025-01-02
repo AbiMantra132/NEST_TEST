@@ -65,7 +65,7 @@ export class CompetitionService {
         data: {
           ...dto,
           imagePoster: imageUrl,
-        },
+        },  
       });
     } catch (error) {
       throw new BadRequestException(
