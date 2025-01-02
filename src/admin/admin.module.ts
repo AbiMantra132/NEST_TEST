@@ -5,7 +5,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CompetitionService } from 'src/competition/competition.service';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { AuthMiddleware } from 'src/middleware/auth.middleware';
+import { AuthMiddleware } from '../middleware/auth.middleware';
 
 AuthMiddleware
 @Module({
