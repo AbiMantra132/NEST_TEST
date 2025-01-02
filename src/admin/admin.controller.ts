@@ -74,6 +74,15 @@ export class AdminController {
     }
   }
 
+  @Post('reimburse/:idReimburse/process')
+  async processReimburse(@Param('idReimburse') idReimburse: string) {
+    try {
+      return await this.adminService.processReimburse(idReimburse);
+    } catch (error) {
+      throw new BadRequestException('Failed to reject reimburse');
+    }
+  }
+
   @Get('competition')
   async getAllCompetitions() {
     try {

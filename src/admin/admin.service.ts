@@ -172,7 +172,7 @@ export class AdminService {
           id: id,
         },
         data: {
-          status: 'approved',
+          status: 'APPROVED',
         },
       });
 
@@ -193,7 +193,28 @@ export class AdminService {
           id: id,
         },
         data: {
-          status: 'rejected',
+          status: 'REJECTED',
+        },
+      });
+
+      return;
+    } catch (err) {
+      console.error('Error approving reimburse:', err);
+      throw new HttpException(
+        'Failed to reject reimburse',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async processReimburse(id: string) {
+    try {
+      await this.prismaService.reimbursement.update({
+        where: {
+          id: id,
+        },
+        data: {
+          status: 'PROCESS',
         },
       });
 
