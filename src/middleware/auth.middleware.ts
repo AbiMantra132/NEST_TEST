@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
@@ -22,17 +23,19 @@ export class AuthMiddleware implements NestMiddleware {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Check if the user role is ADMIN or USER
-      if (typeof decoded !== 'string' && decoded.role !== 'ADMIN') {
-        throw new ForbiddenException('Insufficient permissions');
+      const data = decoded["User"] as User;
+
+      if(data.role !== 'ADMIN' && data.role === 'USER') {
+        throw new ForbiddenException('You are not authorized to access this route');
       }
 
       // Add the decoded user to the request object
       req['user'] = decoded;
-      
+
 
       next();
     } catch (error) {
       throw new UnauthorizedException('Invalid token or not authenticated');
     }
-  }
+  } 
 }
