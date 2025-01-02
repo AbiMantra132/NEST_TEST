@@ -11,6 +11,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { CloudinaryService } from './cloudinary/cloudinary.service';
 import { NotificationModule } from './notification/notification.module';
 import { ProfileModule } from './profile/profile.module';
+import { AdminModule } from './admin/admin.module';
 import * as multer from 'multer';
 import * as path from 'path';
 
@@ -23,6 +24,7 @@ import * as path from 'path';
     AuthModule,
     NotificationModule,
     ProfileModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, CloudinaryService],

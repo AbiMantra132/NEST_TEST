@@ -22,7 +22,7 @@ export class TeamService {
     members: true,
     openSlots: true,
     description: true,
-    status: true
+    status: true,
   };
 
   constructor(private prisma: PrismaService) {}
@@ -78,6 +78,7 @@ export class TeamService {
             name: team.name,
             description: team.description,
             openSlots: team.openSlots,
+            endDate: competition.endDate,
             leader,
             competition,
             members,
@@ -146,6 +147,7 @@ export class TeamService {
         name: team.name,
         description: team.description,
         openSlots: team.openSlots,
+        endDate: competition.endDate,
         leader,
         member,
         competition,
@@ -221,23 +223,13 @@ export class TeamService {
           },
         )}] `,
         receiverId: team.leaderId,
-        teamId: teamId
-      },
-    });
-
-    const pendingUser = await this.prisma.user.findUnique({
-      where: { id: dto.userId },
-      select: {
-      id: true,
-      name: true,
-      profile: true,
-      student_id: true,
+        teamId: teamId,
       },
     });
 
     return team;
   }
-  
+
   async getPendingTeamMembers(teamId: string): Promise<any> {
     try {
       const pendingUsers = await this.prisma.userJoinPending.findMany({
@@ -267,16 +259,10 @@ export class TeamService {
     }
   }
 
-  async stopTeamPublication(teamId: string, leaderId: string): Promise<Team> {
+  async stopTeamPublication(teamId: string, leaderId: string): Promise<any> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },
-      });
-
-      const competition = await this.prisma.competition.findUnique({
-        where: {
-          id: team.competitionId,
-        },
       });
 
       if (!team) {
@@ -289,6 +275,10 @@ export class TeamService {
         );
       }
 
+      const competition = await this.prisma.competition.findUnique({
+        where: { id: team.competitionId },
+      });
+
       if (competition && new Date(competition.endDate) < new Date()) {
         await this.prisma.team.update({
           where: { id: teamId },
@@ -300,22 +290,52 @@ export class TeamService {
         throw new BadRequestException('Competition has expired');
       }
 
-      if (team.openSlots === team.maxMembers) {
-        return await this.prisma.team.update({
-          where: { id: teamId },
-          data: {
-            status: 'INACTIVE',
-          },
-        });
-      }
+      const leader = await this.prisma.user.findUnique({
+        where: { id: team.leaderId },
+        select: {
+          id: true,
+          name: true,
+          profile: true,
+          student_id: true,
+          firstName: true,
+          lastName: true,
+        },
+      });
 
-      return await this.prisma.team.update({
+      const members = await Promise.all(
+        team.members.map(async (memberId) => {
+          return await this.prisma.user.findUnique({
+            where: { id: memberId },
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+              student_id: true,
+            },
+          });
+        }),
+      );
+
+      const teamUpdated = await this.prisma.team.update({
         where: { id: teamId },
         data: {
           openSlots: 0,
           status: 'INACTIVE',
         },
       });
+
+      const enrichedTeam = {
+        id: teamUpdated.id,
+        name: teamUpdated.name,
+        description: teamUpdated.description,
+        openSlots: teamUpdated.openSlots,
+        status: teamUpdated.status,
+        endDate: competition.endDate, 
+        leader,
+        members,
+        competition,
+      };
+      return enrichedTeam;
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -326,7 +346,6 @@ export class TeamService {
       throw new BadRequestException('Failed to stop team publication');
     }
   }
-
   async acceptTeamMember(
     teamId: string,
     leaderId: string,
@@ -346,7 +365,7 @@ export class TeamService {
         teamId: teamId,
       },
     });
-    
+
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },
@@ -390,7 +409,6 @@ export class TeamService {
             },
           });
 
-
         await this.prisma.competitionParticipant.create({
           data: {
             userId: memberId,
@@ -401,7 +419,55 @@ export class TeamService {
           },
         });
 
-        return {updatedTeam, status: 'approved'};
+        const leader = await this.prisma.user.findUnique({
+          where: { id: team.leaderId },
+          select: {
+            id: true,
+            name: true,
+            profile: true,
+            student_id: true,
+            firstName: true,
+            lastName: true,
+          },
+        });
+
+        const members = await Promise.all(
+          updatedTeam.members.map(async (memberId) => {
+            return await this.prisma.user.findUnique({
+              where: { id: memberId },
+              select: {
+                id: true,
+                name: true,
+                profile: true,
+                student_id: true,
+              },
+            });
+          }),
+        );
+
+        const competition = await this.prisma.competition.findUnique({
+          where: { id: team.competitionId },
+          select: {
+            title: true,
+            id: true,
+            endDate: true,
+            level: true,
+            category: true,
+          },
+        });
+
+        const enrichedTeam = {
+          id: updatedTeam.id,
+          name: updatedTeam.name,
+          description: updatedTeam.description,
+          openSlots: updatedTeam.openSlots,
+          endDate: competition.endDate,
+          leader,
+          members,
+          competition,
+        };
+
+        return { enrichedTeam, status: 'approved' };
       } else {
         return { msg: 'rejected by leader', status: 'rejected' };
       }

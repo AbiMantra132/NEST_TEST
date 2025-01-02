@@ -277,8 +277,6 @@ export class ProfileService {
         ...reimburses,
         competition: competition || null,
       };
-
-      return reimburses;
     } catch (err) {
       console.error('Error fetching reimburse detail:', err);
       throw new HttpException('Could not fetch reimburse detail', HttpStatus.INTERNAL_SERVER_ERROR);
