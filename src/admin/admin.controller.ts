@@ -57,20 +57,18 @@ export class AdminController {
   }
 
   @Post('reimburse/:idReimburse/approve')
-  approveReimburse(@Param('idReimburse') idReimburse: string) {
+  async approveReimburse(@Param('idReimburse') idReimburse: string) {
     try {
-      // Logic to approve reimburse
-      return { message: 'Reimburse approved successfully' };
+      return await this.adminService.approveReimburse(idReimburse);
     } catch (error) {
       throw new BadRequestException('Failed to approve reimburse');
     }
   }
 
   @Post('reimburse/:idReimburse/reject')
-  rejectReimburse(@Param('idReimburse') idReimburse: string) {
+  async rejectReimburse(@Param('idReimburse') idReimburse: string) {
     try {
-      // Logic to reject reimburse
-      return { message: 'Reimburse rejected successfully' };
+      return await this.adminService.rejectReimburse(idReimburse);
     } catch (error) {
       throw new BadRequestException('Failed to reject reimburse');
     }
