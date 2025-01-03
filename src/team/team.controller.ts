@@ -5,6 +5,7 @@ import {
   Post,
   Patch,
   Param,
+  Delete,
   Body,
   HttpCode,
   HttpStatus,
@@ -139,6 +140,31 @@ export class TeamController {
         throw error;
       }
       throw new BadRequestException('Failed to stop team');
+    }
+  }
+
+
+  @Delete(':id/members/:leaderId')
+  async removeTeamMember(
+    @Param('id') id: string,
+    @Param('leaderId') leaderId: string,
+  ) {
+    try {
+      if (!id || typeof id !== 'string') {
+        throw new BadRequestException('Invalid team ID provided');
+      }
+
+      if (!leaderId || typeof leaderId !== 'string') {
+        throw new BadRequestException('Invalid member ID provided');
+      }
+
+      await this.teamService.deleteTeam(id, leaderId);
+      return { message: `Member with ID ${leaderId} removed from team ${id} successfully` };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(`Failed to remove member with ID ${leaderId} from team ${id}`);
     }
   }
 }

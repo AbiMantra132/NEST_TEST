@@ -484,7 +484,7 @@ export class TeamService {
     }
   }
 
-  async deleteTeam(teamId: string, leaderId: string): Promise<void> {
+  async deleteTeam(teamId: string, leaderId: string): Promise<{message: string}> {
     try {
       const team = await this.prisma.team.findUnique({
         where: { id: teamId },
@@ -503,10 +503,22 @@ export class TeamService {
         where: { teamId },
       });
 
+      // Delete all competition results associated with the team
+      await this.prisma.competitionResult.deleteMany({
+        where: { competitionId: team.competitionId, userId: { in: team.members } },
+      });
+
+      // Delete all reimbursement requests associated with the team
+      await this.prisma.reimbursement.deleteMany({
+        where: { competitionId: team.competitionId, userId: { in: team.members } },
+      });
+
       // Delete the team
       await this.prisma.team.delete({
         where: { id: teamId },
       });
+
+      return { message: 'Team successfully deleted' };
     } catch (error) {
       if (
         error instanceof NotFoundException ||
