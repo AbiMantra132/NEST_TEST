@@ -142,6 +142,10 @@ export class ProfileService {
         (participant) => participant.competitionId,
       );
 
+      if (competitionIds.length === 0) {
+        return [];
+      }
+
       const competitions = await this.prismaService.competition.findMany({
         where: {
           id: {
@@ -288,6 +292,20 @@ export class ProfileService {
     data: { firstname?: string; lastname?: string; major?: MajorType; password?: string, gender?: string, cohort?: string, student_id?: string, newProfile?: string },
   ) {
     try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: id },
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      const isPasswordValid = user.password === data.password;
+      if (!isPasswordValid) {
+        throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
+      }
+
+
       let majorId = undefined;
       if (data.major) {
         const Major = await this.prismaService.major.findFirst({
@@ -301,37 +319,19 @@ export class ProfileService {
         majorId = Major.id;
       }
 
-      let updatedProfile: { id: string; name: string; createdAt: Date; updatedAt: Date; student_id: string; firstName: string | null; lastName: string | null; email: string; otp: string; gender: string | null; role: $Enums.Role; password: string; cohort: string; profile: string | null; majorId: string; };
-
-      if(data.newProfile !== undefined && data.newProfile.length > 0) {
-        updatedProfile = await this.prismaService.user.update({
-          where: { id: id },
-          data: {
-            firstName: data.firstname,
-            lastName: data.lastname,
-            majorId: majorId,
-            profile: data.newProfile !== undefined && data.newProfile.length > 0 ? data.newProfile : undefined,
-            password: data.password,
-            gender: data.gender,
-            cohort: data.cohort,
-            student_id: data.student_id,
-          },
-        });
-      } else {
-      updatedProfile = await this.prismaService.user.update({
+      const updatedProfile = await this.prismaService.user.update({
         where: { id: id },
         data: {
           firstName: data.firstname,
           lastName: data.lastname,
           majorId: majorId,
+          profile: data.newProfile !== undefined && data.newProfile.length > 0 ? data.newProfile : undefined,
           password: data.password,
           gender: data.gender,
           cohort: data.cohort,
           student_id: data.student_id,
         },
       });
-      }
-
 
       const returnValue = {
         firstName: updatedProfile.firstName,
