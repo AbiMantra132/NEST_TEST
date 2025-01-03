@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { $Enums, MajorType } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ProfileService {
@@ -289,7 +290,8 @@ export class ProfileService {
 
   async updateProfile(
     id: string,
-    data: { firstname?: string; lastname?: string; major?: MajorType; password?: string, gender?: string, cohort?: string, student_id?: string, newProfile?: string },
+    data,
+    newProfile?: string
   ) {
     try {
       const user = await this.prismaService.user.findUnique({
@@ -300,7 +302,8 @@ export class ProfileService {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
 
-      const isPasswordValid = user.password === data.password;
+      const isPasswordValid = await bcrypt.compare(data.password, user.password);
+
       if (!isPasswordValid) {
         throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
       }
@@ -319,36 +322,42 @@ export class ProfileService {
         majorId = Major.id;
       }
 
-      const updatedProfile = await this.prismaService.user.update({
+
+      await this.prismaService.user.update({
         where: { id: id },
         data: {
-          firstName: data.firstname,
-          lastName: data.lastname,
+          firstName: data.firstName || undefined,
+          lastName: data.lastName || undefined,
           majorId: majorId,
-          profile: data.newProfile !== undefined && data.newProfile.length > 0 ? data.newProfile : undefined,
-          password: data.password,
-          gender: data.gender,
-          cohort: data.cohort,
-          student_id: data.student_id,
+          profile: newProfile || undefined,
+          gender: data.gender || undefined,
+          cohort: data.cohort || undefined,
+          student_id: data.student_id || undefined,
+        },
+      });
+
+      const currentProfile = await this.prismaService.user.findUnique({
+        where: { id: id },
+        select: {
+          firstName: true,
+          lastName: true,
+          profile: true,
+          password: true,
+          student_id: true,
+          cohort: true,
+          email: true,
+          gender: true,
         },
       });
 
       const returnValue = {
-        firstName: updatedProfile.firstName,
-        lastName: updatedProfile.lastName,
+        ...currentProfile,
         major: data.major,
-        profile: updatedProfile.profile,
-        password: updatedProfile.password,
-        student_id: updatedProfile.student_id,
-        cohort: updatedProfile.cohort,
-        email: updatedProfile.email,
-        gender: updatedProfile.gender
       };
 
       return returnValue;
     } catch (err) {
       console.error('Error updating profile:', err);
-      throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

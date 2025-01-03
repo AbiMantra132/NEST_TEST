@@ -30,6 +30,7 @@ export class ProfileController {
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    console.log(body);
     let newProfile: string | undefined;
     // Delete the old profile image if a new one is uploaded
     if(file) {
@@ -40,17 +41,7 @@ export class ProfileController {
       newProfile = (await this.cloudinaryService.uploadProfileImage(file)).secure_url;
     }
     try {
-      const { firstname, lastname, major, password, gender, cohort, student_id } = body;
-      return await this.profileService.updateProfile(id, {
-        firstname,
-        lastname,
-        major,
-        password,
-        gender,
-        cohort,
-        student_id,
-        newProfile,
-      });
+      return await this.profileService.updateProfile(id, body, newProfile);
     } catch (err) {
       console.error('Error in updateProfile controller:', err);
       throw new HttpException(
