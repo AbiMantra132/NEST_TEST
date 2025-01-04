@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { $Enums, MajorType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -299,26 +299,26 @@ export class ProfileService {
       });
 
       if (!user) {
-      throw new BadRequestException('Invalid major specified.');
+      throw new BadRequestException('User not found.');
       }
 
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
       if (!isPasswordValid) {
-        throw new BadRequestException('Invalid major specified.');
+      throw new BadRequestException('Invalid password.');
       }
 
-      let majorId = undefined;
+      let majorId: string | undefined = undefined;
       if (data.major) {
-      const Major = await this.prismaService.major.findFirst({
+      const major = await this.prismaService.major.findFirst({
         where: { major: data.major },
         select: { id: true },
       });
 
-      if (!Major) {
+      if (!major) {
         throw new BadRequestException('Invalid major specified.');
       }
-      majorId = Major.id;
+      majorId = major.id;
       }
 
       await this.prismaService.user.update({
@@ -334,13 +334,12 @@ export class ProfileService {
       },
       });
 
-      const currentProfile = await this.prismaService.user.findUnique({
+      const updatedProfile = await this.prismaService.user.findUnique({
       where: { id: id },
       select: {
         firstName: true,
         lastName: true,
         profile: true,
-        password: true,
         student_id: true,
         cohort: true,
         email: true,
@@ -348,15 +347,16 @@ export class ProfileService {
       },
       });
 
-      const returnValue = {
-      ...currentProfile,
+      return {
+      ...updatedProfile,
       major: data.major,
       };
-
-      return returnValue;
     } catch (err) {
       console.error('Error updating profile:', err);
-      throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
+      if (err instanceof BadRequestException) {
+      throw err;
+      }
+      throw new InternalServerErrorException('Unable to update profile.');
     }
   }
 }
