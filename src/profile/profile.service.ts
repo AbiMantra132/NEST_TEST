@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { $Enums, MajorType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -299,26 +299,26 @@ export class ProfileService {
       });
 
       if (!user) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new BadRequestException('Invalid major specified.');
       }
 
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
       if (!isPasswordValid) {
-        throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
+        throw new BadRequestException('Invalid major specified.');
       }
 
       let majorId = undefined;
       if (data.major) {
-        const Major = await this.prismaService.major.findFirst({
-          where: { major: data.major },
-          select: { id: true },
-        });
+      const Major = await this.prismaService.major.findFirst({
+        where: { major: data.major },
+        select: { id: true },
+      });
 
-        if (!Major) {
-          throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
-        }
-        majorId = Major.id;
+      if (!Major) {
+        throw new BadRequestException('Invalid major specified.');
+      }
+      majorId = Major.id;
       }
 
       await this.prismaService.user.update({
@@ -355,7 +355,8 @@ export class ProfileService {
 
       return returnValue;
     } catch (err) {
-      throw new HttpException('Could not update profile', err);
+      console.error('Error updating profile:', err);
+      throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
