@@ -295,69 +295,68 @@ export class ProfileService {
   ) {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { id: id },
+      where: { id: id },
       });
 
       if (!user) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
 
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
       if (!isPasswordValid) {
-        throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
+       throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
       }
-
 
       let majorId = undefined;
       if (data.major) {
-        const Major = await this.prismaService.major.findFirst({
-          where: { major: data.major },
-          select: { id: true },
-        });
+      const Major = await this.prismaService.major.findFirst({
+        where: { major: data.major },
+        select: { id: true },
+      });
 
-        if (!Major) {
-          throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
-        }
-        majorId = Major.id;
+      if (!Major) {
+        throw new HttpException('Major not found', HttpStatus.NOT_FOUND);
+      }
+      majorId = Major.id;
       }
 
-
       await this.prismaService.user.update({
-        where: { id: id },
-        data: {
-          firstName: data.firstName || undefined,
-          lastName: data.lastName || undefined,
-          majorId: majorId,
-          profile: newProfile || undefined,
-          gender: data.gender || undefined,
-          cohort: data.cohort || undefined,
-          student_id: data.student_id || undefined,
-        },
+      where: { id: id },
+      data: {
+        firstName: data.firstName || undefined,
+        lastName: data.lastName || undefined,
+        majorId: majorId,
+        profile: newProfile || undefined,
+        gender: data.gender || undefined,
+        cohort: data.cohort || undefined,
+        student_id: data.student_id || undefined,
+      },
       });
 
       const currentProfile = await this.prismaService.user.findUnique({
-        where: { id: id },
-        select: {
-          firstName: true,
-          lastName: true,
-          profile: true,
-          password: true,
-          student_id: true,
-          cohort: true,
-          email: true,
-          gender: true,
-        },
+      where: { id: id },
+      select: {
+        firstName: true,
+        lastName: true,
+        profile: true,
+        password: true,
+        student_id: true,
+        cohort: true,
+        email: true,
+        gender: true,
+      },
       });
 
       const returnValue = {
-        ...currentProfile,
-        major: data.major,
+      ...currentProfile,
+      major: data.major,
       };
 
       return returnValue;
     } catch (err) {
       console.error('Error updating profile:', err);
+      throw new HttpException('Could not update profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
