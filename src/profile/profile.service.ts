@@ -305,7 +305,7 @@ export class ProfileService {
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
       if (!isPasswordValid) {
-       throw new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
+       return new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
       }
 
       let majorId = undefined;
