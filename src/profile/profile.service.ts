@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { $Enums, MajorType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { error } from 'console';
 
 @Injectable()
 export class ProfileService {
@@ -305,7 +306,7 @@ export class ProfileService {
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
       if (!isPasswordValid) {
-       return new HttpException('Incorrect password', HttpStatus.UNAUTHORIZED);
+       throw new error('Incorrect password', HttpStatus.UNAUTHORIZED);
       }
 
       let majorId = undefined;
