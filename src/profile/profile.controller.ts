@@ -8,11 +8,17 @@ import { UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-
+import { BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService, private cloudinaryService: CloudinaryService) {}
+  constructor(
+    private readonly profileService: ProfileService,
+    private cloudinaryService: CloudinaryService,
+    private prismaService: PrismaService,
+  ) {}
 
   @Patch('/:id')
   @UseInterceptors(FileInterceptor('profile', MulterOptions))
@@ -34,14 +40,31 @@ export class ProfileController {
       throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
     }
 
+    const user = await this.prismaService.user.findUnique({
+      where: { id: id },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(body.password, user.password);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Invalid password.');
+    }
+
     let newProfile: string | undefined;
     // Delete the old profile image if a new one is uploaded
     if (file) {
       const existingProfile = await this.profileService.getProfileById(id);
       if (existingProfile && existingProfile.profile) {
-        await this.cloudinaryService.deleteProfileImage(existingProfile.profile);
+        await this.cloudinaryService.deleteProfileImage(
+          existingProfile.profile,
+        );
       }
-      newProfile = (await this.cloudinaryService.uploadProfileImage(file)).secure_url;
+      newProfile = (await this.cloudinaryService.uploadProfileImage(file))
+        .secure_url;
     }
     try {
       return await this.profileService.updateProfile(id, body, newProfile);
@@ -89,7 +112,7 @@ export class ProfileController {
       return await this.profileService.getReimburses(userId);
     } catch (err) {
       console.error('Error in getReimburses controller:', err);
-      throw new HttpException( 
+      throw new HttpException(
         'Could not fetch reimburses',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

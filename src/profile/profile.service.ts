@@ -294,20 +294,6 @@ export class ProfileService {
     newProfile?: string
   ) {
     try {
-      const user = await this.prismaService.user.findUnique({
-      where: { id: id },
-      });
-
-      if (!user) {
-      throw new BadRequestException('User not found.');
-      }
-
-      const isPasswordValid = await bcrypt.compare(data.password, user.password);
-
-      if (!isPasswordValid) {
-      throw new BadRequestException('Invalid password.');
-      }
-
       let majorId: string | undefined = undefined;
       if (data.major) {
       const major = await this.prismaService.major.findFirst({
