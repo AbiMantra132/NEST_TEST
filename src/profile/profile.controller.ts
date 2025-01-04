@@ -22,7 +22,7 @@ export class ProfileController {
       firstname?: string;
       lastname?: string;
       major?: MajorType;
-      password?: string;
+      password: string;
       gender?: string;
       cohort?: string;
       student_id?: string;
@@ -30,11 +30,14 @@ export class ProfileController {
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log(body);
+    if (!body.password) {
+      throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+    }
+
     let newProfile: string | undefined;
     // Delete the old profile image if a new one is uploaded
-    if(file) {
-      const existingProfile = await this.profileService.getProfileById(id);    
+    if (file) {
+      const existingProfile = await this.profileService.getProfileById(id);
       if (existingProfile && existingProfile.profile) {
         await this.cloudinaryService.deleteProfileImage(existingProfile.profile);
       }
