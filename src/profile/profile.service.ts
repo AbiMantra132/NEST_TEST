@@ -125,7 +125,8 @@ export class ProfileService {
                 profile: member.profile,
               }
             : null;
-        });
+   
+          });
 
         const competition = competitions.find(
           (competition) => competition.id === team.competitionId,
@@ -152,7 +153,9 @@ export class ProfileService {
   async getCompetitions(userId: string) {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { id: userId },
+        where: { 
+          id: userId
+         },
       });
 
       if (!user) {

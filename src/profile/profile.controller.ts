@@ -92,12 +92,12 @@ export class ProfileController {
   }
 
   @Post('/competitionUser')
-  async getCompetitions(@Body() userId: string) {
+  async getCompetitions(@Body() body: { userId: string }) {
     try {
-      if (!userId || Object.keys(userId).length === 0) {
+      if (!body.userId) {
         return [];
       }
-      return await this.profileService.getCompetitions(userId);
+      return await this.profileService.getCompetitions(body.userId);
     } catch (err) {
       console.error('Error in getCompetitions controller:', err);
       throw new HttpException(
