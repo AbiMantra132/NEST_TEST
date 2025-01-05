@@ -468,15 +468,19 @@ export class CompetitionService {
       );
     }
 
+    if (!participant.resultId) {
+      throw new BadRequestException('Participant does not have a result ID');
+    }
+
     const result = await this.prisma.competitionResult.update({
       where: {
         id: participant.resultId,
       },
       data: {
-      result: competitionDto.result,
-      statusUrl: competitionDto.certificateUrl,
-      evidenceUrl: competitionDto.evidenceUrl,
-      updatedAt: new Date(),
+        result: competitionDto.result,
+        statusUrl: competitionDto.certificateUrl,
+        evidenceUrl: competitionDto.evidenceUrl,
+        updatedAt: new Date(),
       },
     });
 
