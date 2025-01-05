@@ -159,7 +159,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: ExpressResponse,
   ) {
     if (!file) {
-      throw new BadRequestException('No file uploaded');
+        await this.authService.updateUserProfile(
+          'https://res.cloudinary.com/dekne7dhp/image/upload/v1736056635/user_profile/daclkyhigay7mtsrl4vy.png',
+          UploadProfileDto.nim,
+          UploadProfileDto.firstName,
+          UploadProfileDto.lastName,
+          UploadProfileDto.gender,
+        );
+
     }
 
     try {
