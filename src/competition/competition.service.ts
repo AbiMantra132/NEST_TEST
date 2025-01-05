@@ -170,7 +170,7 @@ export class CompetitionService {
         userId: joinDto.userId,
         competitionId: id,
         teamId: joinDto?.teamId,
-        resultId: '',
+        resultId: null,
         reimburseStatus: null,
         isLeader: false,
       },
