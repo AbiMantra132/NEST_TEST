@@ -176,6 +176,9 @@ export class CompetitionService {
           evidenceUrl: '',
           updatedAt: new Date(),
         },
+        select: {
+          id: true,
+        },
       });
     }
 
