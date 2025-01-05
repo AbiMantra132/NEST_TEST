@@ -375,8 +375,9 @@ export class CompetitionService {
   }> {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: { userId, competitionId },
-      select: { teamId: true },
     });
+    
+    console.log(participant)
 
     const team = participant?.teamId
       ? await this.prisma.team.findUnique({
@@ -389,6 +390,8 @@ export class CompetitionService {
           },
         })
       : null;
+
+    console.log(team)
 
     const isLeader = team?.leaderId === userId;
     const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
