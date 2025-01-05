@@ -434,6 +434,7 @@ export class TeamService {
             reimburseStatus: leaderCompetitionParticipant.reimburseStatus,
             resultId: leaderCompetitionParticipant.resultId,
             isLeader: false,
+            teamId: teamId
           },
         });
 
