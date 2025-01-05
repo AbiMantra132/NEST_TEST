@@ -324,6 +324,19 @@ export class TeamService {
         },
       });
 
+      await this.prisma.notification.deleteMany({
+        where: {
+          receiverId: leaderId,
+          teamId: teamId,
+        },
+      });
+
+      await this.prisma.userJoinPending.deleteMany({
+        where: {
+          teamId: teamId,
+        },
+      });
+
       const enrichedTeam = {
         id: teamUpdated.id,
         name: teamUpdated.name,
@@ -456,6 +469,20 @@ export class TeamService {
           },
         });
 
+        await this.prisma.notification.deleteMany({
+          where: {
+            receiverId: leaderId,
+            teamId: teamId,
+          },
+        });
+
+        await this.prisma.userJoinPending.deleteMany({
+          where: {
+            userId: memberId,
+            teamId: teamId,
+          },
+        });
+
         const enrichedTeam = {
           id: updatedTeam.id,
           name: updatedTeam.name,
@@ -463,12 +490,25 @@ export class TeamService {
           openSlots: updatedTeam.openSlots,
           endDate: competition.endDate, 
           leader,
-          members,
+          member: members,
           competition,
         };
 
         return { enrichedTeam, status: 'approved' };
       } else {
+        await this.prisma.notification.deleteMany({
+          where: {
+            receiverId: leaderId,
+            teamId: teamId,
+          },
+        });
+
+        await this.prisma.userJoinPending.deleteMany({
+          where: {
+            userId: memberId,
+            teamId: teamId,
+          },
+        });
         return { msg: 'rejected by leader', status: 'rejected' };
       }
     } catch (error) {
@@ -511,6 +551,19 @@ export class TeamService {
       // Delete all reimbursement requests associated with the team
       await this.prisma.reimbursement.deleteMany({
         where: { competitionId: team.competitionId, userId: { in: team.members } },
+      });
+
+      // delete all pending requests
+      await this.prisma.userJoinPending.deleteMany({
+        where: { teamId },
+      });
+
+      // delete all notification from the leader of the team that is sent by requesting user
+      await this.prisma.notification.deleteMany({
+        where: {
+          receiverId: leaderId,
+          teamId: teamId,
+        },
       });
 
       // Delete the team
