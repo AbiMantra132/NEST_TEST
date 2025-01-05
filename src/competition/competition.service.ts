@@ -65,7 +65,7 @@ export class CompetitionService {
         data: {
           ...dto,
           imagePoster: imageUrl,
-        },  
+        },
       });
     } catch (error) {
       throw new BadRequestException(
@@ -165,12 +165,26 @@ export class CompetitionService {
       },
     });
 
+    let competitionResultId = null;
+
+    if (!joinDto.teamId) {
+      competitionResultId = await this.prisma.competitionResult.create({
+        data: {
+          competitionId: id,
+          userId: joinDto.userId,
+          statusUrl: '',
+          evidenceUrl: '',
+          updatedAt: new Date(),
+        },
+      });
+    }
+
     return await this.prisma.competitionParticipant.create({
       data: {
         userId: joinDto.userId,
         competitionId: id,
         teamId: joinDto?.teamId,
-        resultId: null,
+        resultId: competitionResultId,
         reimburseStatus: null,
         isLeader: false,
       },
@@ -229,7 +243,7 @@ export class CompetitionService {
         endDate: teamDto.endDate,
         openSlots: teamDto.openSlots + 1 - currentMembersCount,
         status: 'ACTIVE',
-        phone: teamDto.phone
+        phone: teamDto.phone,
       },
       select: {
         id: true,
@@ -257,11 +271,11 @@ export class CompetitionService {
 
     await this.prisma.competitionResult.create({
       data: {
-      competitionId: id,
-      userId: teamDto.leaderId,
-      statusUrl: '',
-      evidenceUrl: '',
-      updatedAt: new Date(),
+        competitionId: id,
+        userId: teamDto.leaderId,
+        statusUrl: '',
+        evidenceUrl: '',
+        updatedAt: new Date(),
       },
     });
 
@@ -376,8 +390,8 @@ export class CompetitionService {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: { userId, competitionId },
     });
-    
-    console.log(participant)
+
+    console.log(participant);
 
     const team = participant?.teamId
       ? await this.prisma.team.findUnique({
@@ -391,7 +405,7 @@ export class CompetitionService {
         })
       : null;
 
-    console.log(team)
+    console.log(team);
 
     const isLeader = team?.leaderId === userId;
     const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
@@ -402,8 +416,8 @@ export class CompetitionService {
     });
     const competitionResult = await this.prisma.competitionResult.findFirst({
       where: { userId, competitionId },
-      select: {result: true, evidenceUrl: true}
-    })
+      select: { result: true, evidenceUrl: true },
+    });
 
     return {
       isJoined: !!participant,
@@ -446,7 +460,11 @@ export class CompetitionService {
   async uploadResult(
     competitionId: string,
     userId: string,
-    competitionDto: { result: string; evidenceUrl?: string, certificateUrl: string },
+    competitionDto: {
+      result: string;
+      evidenceUrl?: string;
+      certificateUrl: string;
+    },
   ) {
     const participant = await this.prisma.competitionParticipant.findFirst({
       where: { competitionId, userId },
