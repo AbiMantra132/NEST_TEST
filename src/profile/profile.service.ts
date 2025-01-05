@@ -1,4 +1,10 @@
-import { Injectable, HttpException, HttpStatus, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { $Enums, MajorType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -10,7 +16,7 @@ export class ProfileService {
   async getProfileById(userId: string) {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user) {
@@ -20,12 +26,23 @@ export class ProfileService {
       return user;
     } catch (err) {
       console.error('Error fetching user by ID:', err);
-      throw new HttpException('Could not fetch user by ID', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Could not fetch user by ID',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async getTeams(userId: string) {
     try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
       const teams = await this.prismaService.team.findMany({
         where: {
           members: {
@@ -79,19 +96,21 @@ export class ProfileService {
         },
       });
 
-      const competitionIds = teams.map((team) => team.competitionId).filter((id) => id !== null);
+      const competitionIds = teams
+        .map((team) => team.competitionId)
+        .filter((id) => id !== null);
       const uniqueCompetitionIds = [...new Set(competitionIds)];
 
       const competitions = await this.prismaService.competition.findMany({
         where: {
           id: {
-        in: uniqueCompetitionIds,
+            in: uniqueCompetitionIds,
           },
         },
         select: {
           id: true,
           title: true,
-          level: true
+          level: true,
         },
       });
 
@@ -100,12 +119,12 @@ export class ProfileService {
         const teamMembers = team.members.map((memberId) => {
           const member = members.find((member) => member.id === memberId);
           return member
-        ? {
-            studentId: member.student_id,
-            name: member.name,
-            profile: member.profile,
-          }
-        : null;
+            ? {
+                studentId: member.student_id,
+                name: member.name,
+                profile: member.profile,
+              }
+            : null;
         });
 
         const competition = competitions.find(
@@ -123,12 +142,23 @@ export class ProfileService {
       return response;
     } catch (err) {
       console.error('Error fetching teams:', err);
-      throw new HttpException('Could not fetch teams', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Could not fetch teams',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async getCompetitions(userId: string) {
     try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
       const competitionParticipants =
         await this.prismaService.competitionParticipant.findMany({
           where: {
@@ -168,20 +198,20 @@ export class ProfileService {
         },
       });
 
-      const competitionResults = await this.prismaService.competitionResult.findMany({
-        where: {
-          userId: userId,
-        },
-        select: {
-          id: true,
-          competitionId: true,
-          result: true,
-          statusUrl: true,
-          evidenceUrl: true,
-          createdAt: true,
-        },
-      });
-
+      const competitionResults =
+        await this.prismaService.competitionResult.findMany({
+          where: {
+            userId: userId,
+          },
+          select: {
+            id: true,
+            competitionId: true,
+            result: true,
+            statusUrl: true,
+            evidenceUrl: true,
+            createdAt: true,
+          },
+        });
 
       const response = competitions.map((competition) => {
         const result = competitionResults.find(
@@ -189,29 +219,40 @@ export class ProfileService {
         );
         return {
           ...competition,
-          result: result ? result.result : "PESERTA",
+          result: result ? result.result : 'PESERTA',
           statusUrl: result ? result.statusUrl : null,
           evidenceUrl: result ? result.evidenceUrl : null,
         };
       });
 
       return response;
-
     } catch (err) {
       console.error('Error fetching competitions:', err);
-      throw new HttpException('Could not fetch competitions', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Could not fetch competitions',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async getReimburses(userId: string) {
     try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
       const reimburses = await this.prismaService.reimbursement.findMany({
         where: {
           userId: userId,
         },
       });
 
-      const competitionIds = reimburses.map((reimburse) => reimburse.competitionId);
+      const competitionIds = reimburses.map(
+        (reimburse) => reimburse.competitionId,
+      );
       const competitions = await this.prismaService.competition.findMany({
         where: {
           id: {
@@ -237,7 +278,10 @@ export class ProfileService {
       return response;
     } catch (err) {
       console.error('Error fetching reimburses:', err);
-      throw new HttpException('Could not fetch reimburses', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Could not fetch reimburses',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -261,7 +305,10 @@ export class ProfileService {
       });
 
       if (!reimburses) {
-        throw new HttpException('Reimbursement not found', HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          'Reimbursement not found',
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const competition = await this.prismaService.competition.findUnique({
@@ -284,63 +331,62 @@ export class ProfileService {
       };
     } catch (err) {
       console.error('Error fetching reimburse detail:', err);
-      throw new HttpException('Could not fetch reimburse detail', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Could not fetch reimburse detail',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async updateProfile(
-    id: string,
-    data,
-    newProfile?: string
-  ) {
+  async updateProfile(id: string, data, newProfile?: string) {
     try {
       let majorId: string | undefined = undefined;
       if (data.major) {
-      const major = await this.prismaService.major.findFirst({
-        where: { major: data.major },
-        select: { id: true },
-      });
+        const major = await this.prismaService.major.findFirst({
+          where: { major: data.major },
+          select: { id: true },
+        });
 
-      if (!major) {
-        throw new BadRequestException('Invalid major specified.');
-      }
-      majorId = major.id;
+        if (!major) {
+          throw new BadRequestException('Invalid major specified.');
+        }
+        majorId = major.id;
       }
 
       await this.prismaService.user.update({
-      where: { id: id },
-      data: {
-        firstName: data.firstName || undefined,
-        lastName: data.lastName || undefined,
-        majorId: majorId,
-        profile: newProfile || undefined,
-        gender: data.gender || undefined,
-        cohort: data.cohort || undefined,
-        student_id: data.student_id || undefined,
-      },
+        where: { id: id },
+        data: {
+          firstName: data.firstName || undefined,
+          lastName: data.lastName || undefined,
+          majorId: majorId,
+          profile: newProfile || undefined,
+          gender: data.gender || undefined,
+          cohort: data.cohort || undefined,
+          student_id: data.student_id || undefined,
+        },
       });
 
       const updatedProfile = await this.prismaService.user.findUnique({
-      where: { id: id },
-      select: {
-        firstName: true,
-        lastName: true,
-        profile: true,
-        student_id: true,
-        cohort: true,
-        email: true,
-        gender: true,
-      },
+        where: { id: id },
+        select: {
+          firstName: true,
+          lastName: true,
+          profile: true,
+          student_id: true,
+          cohort: true,
+          email: true,
+          gender: true,
+        },
       });
 
       return {
-      ...updatedProfile,
-      major: data.major,
+        ...updatedProfile,
+        major: data.major,
       };
     } catch (err) {
       console.error('Error updating profile:', err);
       if (err instanceof BadRequestException) {
-      throw err;
+        throw err;
       }
       throw new InternalServerErrorException('Unable to update profile.');
     }

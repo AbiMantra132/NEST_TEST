@@ -94,7 +94,7 @@ export class ProfileController {
   @Post('/competitionUser')
   async getCompetitions(@Body() userId: string) {
     try {
-      if(!userId) {
+      if (!userId || Object.keys(userId).length === 0) {
         return [];
       }
       return await this.profileService.getCompetitions(userId);
