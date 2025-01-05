@@ -71,6 +71,7 @@ model Team {
   name            String
   description     String
   leaderId        String
+  phoneq          String
   competitionId   String
   members         String[]    @map("members") @db.ObjectId
   openSlots       Int
