@@ -187,7 +187,7 @@ export class CompetitionService {
         userId: joinDto.userId,
         competitionId: id,
         teamId: joinDto?.teamId,
-        resultId: competitionResultId,
+        resultId: competitionResultId?.id,
         reimburseStatus: null,
         isLeader: false,
       },
