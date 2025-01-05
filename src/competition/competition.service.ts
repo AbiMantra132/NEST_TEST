@@ -186,6 +186,7 @@ export class CompetitionService {
       description: string;
       endDate: Date;
       openSlots: number;
+      phone: string;
     },
   ): Promise<any> {
     const existingTeam = await this.prisma.team.findFirst({
@@ -227,7 +228,8 @@ export class CompetitionService {
         maxMembers: teamDto.openSlots + 1,
         endDate: teamDto.endDate,
         openSlots: teamDto.openSlots + 1 - currentMembersCount,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        phone: teamDto.phone
       },
       select: {
         id: true,

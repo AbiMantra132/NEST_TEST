@@ -172,7 +172,7 @@ export class CompetitionController {
         competitionId,
         userId,
       );
-      
+
       return status;
     } catch (error) {
       throw new HttpException(
@@ -229,7 +229,7 @@ export class CompetitionController {
       let certificateUrl: string | undefined;
       if (certificateFile) {
         const uploadResult =
-        await this.cloudinaryService.uploadCertificate(certificateFile);
+          await this.cloudinaryService.uploadCertificate(certificateFile);
         certificateUrl = uploadResult.secure_url;
       }
 
@@ -238,8 +238,8 @@ export class CompetitionController {
         body.userId,
         {
           result: body.result,
-          evidenceUrl, 
-          certificateUrl 
+          evidenceUrl,
+          certificateUrl,
         },
       );
     } catch (error) {

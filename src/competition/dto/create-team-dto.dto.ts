@@ -5,4 +5,5 @@ export class CreateTeamDto {
   description: string;
   openSlots: number;
   endDate: Date;
+  phone: string;
 }

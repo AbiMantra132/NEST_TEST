@@ -3,4 +3,5 @@ export class CreateTeamDto {
   leaderId: string;
   competitionId: string;
   description: string;
+  phone: string;
 }
