@@ -408,8 +408,6 @@ export class CompetitionService {
         })
       : null;
 
-    console.log(team);
-
     const isLeader = team?.leaderId === userId;
     const hasReimburse = !!(await this.prisma.reimbursement.findFirst({
       where: { userId, competitionId },

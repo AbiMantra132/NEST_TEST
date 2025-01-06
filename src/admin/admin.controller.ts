@@ -132,23 +132,19 @@ export class AdminController {
     @Body() updateDto: UpdateCompetitionDto,
   ) {
     try {
-      let url = '';
-      if (File) {
-        const dataImage = await this.cloudinaryService.uploadPoster(file);
-        url = dataImage.secure_url;
+      let newCompetition: string | null;
+      if (file) {
+        const existingCompetition = await this.competitionService.findOne(id);
+        if (existingCompetition && existingCompetition.imagePoster) {
+          await this.cloudinaryService.deleteCompetitionPoster(
+            existingCompetition.imagePoster,
+          );
+        }
+        newCompetition = (await this.cloudinaryService.uploadPoster(file))
+          .secure_url;
       }
 
-      const previousPost = await this.competitionService.findOne(id);
-      if (!previousPost) {
-        throw new HttpException(
-          `Competition with id ${id} not found`,
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      if (url) await this.cloudinaryService.deleteCompetitionPoster(url);
-
-      return await this.competitionService.update(url, id, updateDto);
+      return await this.competitionService.update(newCompetition, id, updateDto);
     } catch (error) {
       throw new HttpException(
         `Error updating competition with id ${id}: ${error.message}`,

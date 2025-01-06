@@ -63,9 +63,10 @@ export class ProfileController {
           existingProfile.profile,
         );
       }
-      newProfile = (await this.cloudinaryService.uploadProfileImage(file))
-        .secure_url;
+      newProfile = (await this.cloudinaryService.uploadProfileImage(file)).secure_url;
     }
+
+    
     try {
       return await this.profileService.updateProfile(id, body, newProfile);
     } catch (err) {
