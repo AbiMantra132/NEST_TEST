@@ -36,10 +36,10 @@ export class AdminService {
 
       const totalReimburses = response.length;
       const approvedReimburses = response.filter(
-        (reimburse) => reimburse.status === 'approved',
+        (reimburse) => reimburse.status === 'APPROVED',
       );
       const rejectedReimburses = response.filter(
-        (reimburse) => reimburse.status === 'rejected',
+        (reimburse) => reimburse.status === 'REJECTED',
       );
       const latestReimburses = response
         .sort(
