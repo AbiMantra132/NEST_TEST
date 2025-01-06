@@ -106,7 +106,7 @@ export class AdminService {
         select: {
           id: true,
           title: true,
-          level: true,
+          level: true                                                                                                                                                                                                                                                                         ,
           endDate: true,
           startDate: true,
           description: true,
@@ -120,7 +120,8 @@ export class AdminService {
         select: {
           id: true,
           student_id: true,
-          profile: true
+          profile: true,
+          name: true,
         },
       });
 
